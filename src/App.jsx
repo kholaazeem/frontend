@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import CustomerDashboard from './pages/customer/CustomerDashboard';
+import WorkerDashboard from './pages/worker/WorkerDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -33,9 +36,7 @@ export default function App() {
             path="/customer/dashboard"
             element={
               <ProtectedRoute allowedRoles={['customer']}>
-                <div className="p-8 text-center glass-panel m-10 rounded-2xl">
-                  <h1 className="text-2xl font-bold">👤 Customer Dashboard (Coming in Chunk 3)</h1>
-                </div>
+                <CustomerDashboard />
               </ProtectedRoute>
             }
           />
@@ -43,9 +44,7 @@ export default function App() {
             path="/worker/dashboard"
             element={
               <ProtectedRoute allowedRoles={['worker']}>
-                <div className="p-8 text-center glass-panel m-10 rounded-2xl">
-                  <h1 className="text-2xl font-bold">👷 Worker Dashboard (Coming in Chunk 3)</h1>
-                </div>
+                <WorkerDashboard />
               </ProtectedRoute>
             }
           />
@@ -53,9 +52,7 @@ export default function App() {
             path="/admin/dashboard"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <div className="p-8 text-center glass-panel m-10 rounded-2xl">
-                  <h1 className="text-2xl font-bold">🛡️ Admin Dashboard (Coming in Chunk 3)</h1>
-                </div>
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />

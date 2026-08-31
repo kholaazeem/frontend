@@ -1,0 +1,445 @@
+import React, { useState, useEffect } from 'react';
+import DashboardLayout from '../../components/layout/DashboardLayout';
+import StatusBadge from '../../components/common/StatusBadge';
+import ActionMenu from '../../components/common/ActionMenu';
+import WorkerNotificationBanner from '../../components/worker/WorkerNotificationBanner';
+import API from '../../services/api';
+import { Wrench, CheckCircle2, Clock, AlertTriangle, Star, Check, X, ShieldAlert, Lock } from 'lucide-react';
+import io from 'socket.io-client';
+
+export default function WorkerDashboard() {
+  const [tickets, setTickets] = useState([
+    {
+      _id: 'tkt_1001',
+      ticketNumber: 'TKT-1001',
+      customer: { name: 'Sara Khan', email: 'customer@demo.com', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
+      subject: 'AC cooling issue and water leaking',
+      description: 'My main office AC is leaking water continuously and not cooling properly.',
+      category: 'Appliance',
+      status: 'accepted',
+      urgency: 'High',
+      aiTriage: {
+        predictedCategory: 'Appliance',
+        suggestedUrgency: 'High',
+        aiSummary: 'Appliance leakage and cooling failure reported by customer.'
+      },
+      createdAt: '2026-08-30'
+    },
+    {
+      _id: 'tkt_1003',
+      ticketNumber: 'TKT-1003',
+      customer: { name: 'Usman Ahmed', email: 'usman@demo.com', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150' },
+      subject: 'Server connection timeout error 504',
+      description: 'Production API returning 504 gateway timeout on login route.',
+      category: 'Technical',
+      status: 'pending',
+      urgency: 'Medium',
+      aiTriage: {
+        predictedCategory: 'Technical',
+        suggestedUrgency: 'High',
+        aiSummary: 'Production server gateway timeout error.'
+      },
+      createdAt: '2026-08-30'
+    }
+  ]);
+
+  const [notification, setNotification] = useState({
+    ticketId: 'tkt_1003',
+    ticketNumber: 'TKT-1003',
+    subject: 'Server connection timeout error 504'
+  });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedComplaintModal, setSelectedComplaintModal] = useState(null);
+  const [resolutionModalTicket, setResolutionModalTicket] = useState(null);
+  const [resolutionNoteText, setResolutionNoteText] = useState('');
+
+  useEffect(() => {
+    fetchWorkerTickets();
+
+    // Socket.IO Real-time notification listener
+    const socket = io('/', { transports: ['websocket', 'polling'] });
+    socket.on('new_booking_notification', (data) => {
+      setNotification(data);
+      fetchWorkerTickets();
+    });
+
+    return () => socket.disconnect();
+  }, []);
+
+  const fetchWorkerTickets = async () => {
+    try {
+      const res = await API.get('/tickets');
+      if (res.data && res.data.length > 0) {
+        setTickets(res.data);
+      }
+    } catch (err) {
+      console.error('Fetch worker tickets error:', err);
+    }
+  };
+
+  // Miss's Flow: Worker Accept Booking
+  const handleAcceptBooking = async (ticketId) => {
+    try {
+      await API.put(`/tickets/${ticketId}/status`, { status: 'accepted' });
+      setTickets(tickets.map(t => t._id === ticketId ? { ...t, status: 'accepted' } : t));
+      setNotification(null);
+    } catch (err) {
+      setTickets(tickets.map(t => t._id === ticketId ? { ...t, status: 'accepted' } : t));
+      setNotification(null);
+    }
+  };
+
+  // Miss's Flow: Worker Reject Booking
+  const handleRejectBooking = async (ticketId) => {
+    if (window.confirm('Reject this booking request?')) {
+      try {
+        await API.put(`/tickets/${ticketId}/status`, { status: 'rejected' });
+        setTickets(tickets.map(t => t._id === ticketId ? { ...t, status: 'rejected' } : t));
+        setNotification(null);
+      } catch (err) {
+        setTickets(tickets.map(t => t._id === ticketId ? { ...t, status: 'rejected' } : t));
+        setNotification(null);
+      }
+    }
+  };
+
+  // Miss's Flow: Worker Urgency Level Selector [Low, Medium, High]
+  const handleUrgencyChange = async (ticketId, newUrgency) => {
+    try {
+      await API.put(`/tickets/${ticketId}/status`, { urgency: newUrgency });
+      setTickets(tickets.map(t => t._id === ticketId ? { ...t, urgency: newUrgency } : t));
+    } catch (err) {
+      setTickets(tickets.map(t => t._id === ticketId ? { ...t, urgency: newUrgency } : t));
+    }
+  };
+
+  // Miss's Flow: Worker Status Updater [Pending, Accepted, In Progress, Completed]
+  const handleStatusChange = async (ticket, newStatus) => {
+    if (ticket.status === 'completed' || ticket.status === 'rejected') {
+      alert('Status locked! Completed or rejected tasks cannot be edited.');
+      return;
+    }
+
+    if (newStatus === 'completed') {
+      setResolutionModalTicket(ticket);
+      return;
+    }
+
+    try {
+      await API.put(`/tickets/${ticket._id}/status`, { status: newStatus });
+      setTickets(tickets.map(t => t._id === ticket._id ? { ...t, status: newStatus } : t));
+    } catch (err) {
+      setTickets(tickets.map(t => t._id === ticket._id ? { ...t, status: newStatus } : t));
+    }
+  };
+
+  const handleConfirmResolution = async () => {
+    if (!resolutionModalTicket) return;
+    try {
+      await API.put(`/tickets/${resolutionModalTicket._id}/status`, {
+        status: 'completed',
+        resolutionNote: resolutionNoteText || 'Issue successfully resolved by worker.'
+      });
+      setTickets(tickets.map(t => t._id === resolutionModalTicket._id ? { ...t, status: 'completed', resolutionNote: resolutionNoteText } : t));
+      setResolutionModalTicket(null);
+      setResolutionNoteText('');
+    } catch (err) {
+      setTickets(tickets.map(t => t._id === resolutionModalTicket._id ? { ...t, status: 'completed', resolutionNote: resolutionNoteText } : t));
+      setResolutionModalTicket(null);
+      setResolutionNoteText('');
+    }
+  };
+
+  const filteredTickets = tickets.filter(t => 
+    t.ticketNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.customer?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const stats = {
+    assigned: tickets.length,
+    inProgress: tickets.filter(t => t.status === 'in-progress' || t.status === 'accepted').length,
+    completedToday: tickets.filter(t => t.status === 'completed').length,
+    rating: 4.9
+  };
+
+  return (
+    <DashboardLayout onSearch={setSearchQuery}>
+      
+      <div className="space-y-6 max-w-7xl mx-auto">
+        
+        {/* Real-time Notification Alert Banner */}
+        <WorkerNotificationBanner
+          notification={notification}
+          onAccept={handleAcceptBooking}
+          onReject={handleRejectBooking}
+          onClose={() => setNotification(null)}
+        />
+
+        {/* Worker Header Banner */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 rounded-3xl border border-white/90">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
+              👷 Worker / Agent Portal
+            </span>
+            <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight mt-1.5">
+              Assigned Bookings & Task Queue
+            </h1>
+            <p className="text-xs text-slate-500">Review bookings, accept/reject, set urgency, and update task status</p>
+          </div>
+
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-4 py-2 rounded-2xl">
+            <Star size={18} className="text-amber-500 fill-amber-500" />
+            <div>
+              <span className="text-[10px] text-amber-700 font-bold block uppercase">Worker Rating</span>
+              <span className="text-sm font-extrabold text-amber-800">4.9 / 5.0 ⭐ (24 Reviews)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3 Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="glass-card p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold">
+              <Wrench size={20} />
+            </div>
+            <div>
+              <span className="text-xs text-slate-500 font-medium">Assigned Tasks</span>
+              <p className="text-xl font-black text-slate-800">{stats.assigned}</p>
+            </div>
+          </div>
+
+          <div className="glass-card p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold">
+              <Clock size={20} />
+            </div>
+            <div>
+              <span className="text-xs text-slate-500 font-medium">In Progress</span>
+              <p className="text-xl font-black text-slate-800">{stats.inProgress}</p>
+            </div>
+          </div>
+
+          <div className="glass-card p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
+              <CheckCircle2 size={20} />
+            </div>
+            <div>
+              <span className="text-xs text-slate-500 font-medium">Completed</span>
+              <p className="text-xl font-black text-slate-800">{stats.completedToday}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* WORKER TASK QUEUE TABLE - Matches Miss's Flow! */}
+        <div className="glass-panel rounded-3xl border border-white/90 shadow-lg overflow-hidden space-y-4">
+          
+          <div className="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
+            <h3 className="font-extrabold text-slate-800 text-base">Booking Requests & Tasks</h3>
+            <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+              Showing {filteredTickets.length} tasks
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
+                  <th className="py-3 px-4">Ticket ID</th>
+                  <th className="py-3 px-4">Customer</th>
+                  <th className="py-3 px-4">Subject & AI Triage</th>
+                  <th className="py-3 px-4">Urgency Level</th>
+                  <th className="py-3 px-4">Task Status</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/70">
+                {filteredTickets.map((t) => {
+                  const isLocked = t.status === 'completed' || t.status === 'rejected';
+
+                  return (
+                    <tr key={t._id} className="hover:bg-blue-50/40 transition-colors">
+                      <td className="py-3.5 px-4 font-extrabold text-blue-600">{t.ticketNumber}</td>
+                      
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={t.customer?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'}
+                            alt="Customer"
+                            className="w-7 h-7 rounded-lg object-cover border border-slate-200"
+                          />
+                          <div>
+                            <p className="font-bold text-slate-800">{t.customer?.name || 'Customer'}</p>
+                            <p className="text-[10px] text-slate-400 font-semibold">{t.customer?.email}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <p className="font-bold text-slate-800 text-sm truncate max-w-xs">{t.subject}</p>
+                        {t.aiTriage && (
+                          <span className="text-[10px] text-blue-700 font-semibold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 inline-block mt-0.5">
+                            🤖 AI: {t.aiTriage.predictedCategory}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Urgency Selector Dropdown [Low, Medium, High] */}
+                      <td className="py-3.5 px-4">
+                        {isLocked ? (
+                          <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold ${
+                            t.urgency === 'High' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
+                          }`}>
+                            {t.urgency || 'Medium'}
+                          </span>
+                        ) : (
+                          <select
+                            value={t.urgency || 'Medium'}
+                            onChange={(e) => handleUrgencyChange(t._id, e.target.value)}
+                            className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                          >
+                            <option value="Low">🟢 Low</option>
+                            <option value="Medium">🟡 Medium</option>
+                            <option value="High">🔴 High</option>
+                          </select>
+                        )}
+                      </td>
+
+                      {/* Status Selector Dropdown [Pending, Accepted, In Progress, Completed] */}
+                      <td className="py-3.5 px-4">
+                        {isLocked ? (
+                          <div className="flex items-center gap-1">
+                            <StatusBadge status={t.status} />
+                            <Lock size={12} className="text-slate-400" title="Status locked" />
+                          </div>
+                        ) : (
+                          <select
+                            value={t.status}
+                            onChange={(e) => handleStatusChange(t, e.target.value)}
+                            className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                          >
+                            <option value="pending">Alert: Pending</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed ✅</option>
+                            <option value="rejected">Rejected ❌</option>
+                          </select>
+                        )}
+                      </td>
+
+                      {/* Actions: Accept/Reject Buttons or View */}
+                      <td className="py-3.5 px-4 text-right">
+                        {t.status === 'pending' ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleAcceptBooking(t._id)}
+                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1"
+                            >
+                              <Check size={12} /> Accept
+                            </button>
+                            <button
+                              onClick={() => handleRejectBooking(t._id)}
+                              className="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                            >
+                              <X size={12} /> Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setSelectedComplaintModal(t)}
+                            className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                          >
+                            View Details
+                          </button>
+                        )}
+                      </td>
+
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Resolution Note Modal */}
+      {resolutionModalTicket && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="glass-panel p-6 rounded-3xl max-w-md w-full shadow-2xl space-y-4">
+            <h3 className="font-extrabold text-slate-800 text-base flex items-center gap-2">
+              <CheckCircle2 className="text-emerald-600" /> Complete Task & Add Resolution Note
+            </h3>
+            <p className="text-xs text-slate-500">
+              Ticket <span className="font-bold text-blue-600">{resolutionModalTicket.ticketNumber}</span> will be marked as Completed. Once completed, status will be locked!
+            </p>
+
+            <textarea
+              rows={3}
+              value={resolutionNoteText}
+              onChange={(e) => setResolutionNoteText(e.target.value)}
+              placeholder="Enter resolution notes (e.g. Fixed water leakage and recharged gas)..."
+              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            />
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setResolutionModalTicket(null)}
+                className="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmResolution}
+                className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl cursor-pointer shadow-md"
+              >
+                Confirm Completion ✅
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Details View Modal */}
+      {selectedComplaintModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="glass-panel p-6 rounded-3xl max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div>
+                <span className="text-xs font-extrabold text-blue-600">{selectedComplaintModal.ticketNumber}</span>
+                <h3 className="font-bold text-slate-800 text-sm">{selectedComplaintModal.subject}</h3>
+              </div>
+              <StatusBadge status={selectedComplaintModal.status} />
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <span className="font-bold text-slate-500 uppercase block">Customer Description:</span>
+              <p className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-700 font-medium">
+                {selectedComplaintModal.description}
+              </p>
+            </div>
+
+            {selectedComplaintModal.resolutionNote && (
+              <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-200 space-y-1 text-xs">
+                <span className="font-bold text-emerald-800">✅ Worker Resolution Note:</span>
+                <p className="text-emerald-700 font-medium">{selectedComplaintModal.resolutionNote}</p>
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setSelectedComplaintModal(null)}
+                className="px-4 py-2 btn-primary rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </DashboardLayout>
+  );
+}
