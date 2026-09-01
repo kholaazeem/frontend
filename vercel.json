@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://backend-iota-six-56.vercel.app/api/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }

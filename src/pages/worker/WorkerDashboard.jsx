@@ -58,7 +58,7 @@ export default function WorkerDashboard() {
     fetchWorkerTickets();
 
     // Socket.IO Real-time notification listener
-    const socket = io('/', { transports: ['websocket', 'polling'] });
+    const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
     socket.on('new_booking_notification', (data) => {
       setNotification(data);
       fetchWorkerTickets();
