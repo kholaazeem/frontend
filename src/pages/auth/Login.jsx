@@ -108,11 +108,18 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="text-center text-xs text-slate-500">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-blue-600 font-semibold hover:underline">
-            Register here
-          </Link>
+        <div className="text-center space-y-2">
+          <div className="text-xs text-slate-500">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-blue-600 font-semibold hover:underline">
+              Register here
+            </Link>
+          </div>
+          <div>
+            <Link to="/" className="text-xs text-slate-400 hover:text-indigo-600 font-medium transition-colors">
+              ← Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     </div>

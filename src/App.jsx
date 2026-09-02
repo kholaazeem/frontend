@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
@@ -14,7 +15,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // Redirect to respective dashboard if unauthorized for this role
     if (user.role === 'customer') return <Navigate to="/customer/dashboard" replace />;
     if (user.role === 'worker') return <Navigate to="/worker/dashboard" replace />;
     if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
@@ -27,7 +27,7 @@ export default function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
@@ -57,7 +57,7 @@ export default function App() {
             }
           />
 
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthProvider>

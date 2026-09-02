@@ -34,7 +34,7 @@ export default function Sidebar({ onOpenCreateModal, onOpenProfileModal }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const getNavItems = () => {

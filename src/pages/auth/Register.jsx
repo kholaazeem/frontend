@@ -173,11 +173,18 @@ export default function Register() {
           </button>
         </form>
 
-        <div className="text-center text-xs text-slate-500">
-          Already registered?{' '}
-          <Link to="/login" className="text-blue-600 font-semibold hover:underline">
-            Sign In here
-          </Link>
+        <div className="text-center space-y-2">
+          <div className="text-xs text-slate-500">
+            Already registered?{' '}
+            <Link to="/login" className="text-blue-600 font-semibold hover:underline">
+              Sign In here
+            </Link>
+          </div>
+          <div>
+            <Link to="/" className="text-xs text-slate-400 hover:text-indigo-600 font-medium transition-colors">
+              ← Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     </div>
