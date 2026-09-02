@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Search, PlusCircle, Bell, Bot, Sparkles, UserCheck, Wrench, ShieldCheck } from 'lucide-react';
+import { Search, PlusCircle, Bell, Bot, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Navbar({ onSearch, onOpenCreateModal, notificationCount = 2 }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const { user, setDemoRole } = useAuth();
+  const { user } = useAuth();
 
   const handleSearchChange = (e) => {
     const val = e.target.value;
@@ -29,41 +29,6 @@ export default function Navbar({ onSearch, onOpenCreateModal, notificationCount 
 
       {/* Action Controls & Notifications */}
       <div className="flex items-center gap-3">
-        
-        {/* Quick Demo Switcher Pills in Navbar for Instant Hackathon Demonstration */}
-        <div className="hidden lg:flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200 text-xs">
-          <span className="text-[11px] font-semibold text-slate-500 px-2">Role:</span>
-          <button
-            onClick={() => setDemoRole('customer')}
-            className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
-              user?.role === 'customer'
-                ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Customer
-          </button>
-          <button
-            onClick={() => setDemoRole('worker')}
-            className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
-              user?.role === 'worker'
-                ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Worker
-          </button>
-          <button
-            onClick={() => setDemoRole('admin')}
-            className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
-              user?.role === 'admin'
-                ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Admin
-          </button>
-        </div>
 
         {/* Real-time Notification Bell */}
         <div className="relative">

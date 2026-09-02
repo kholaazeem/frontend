@@ -130,13 +130,19 @@ export default function Sidebar({ onOpenCreateModal }) {
       <div className="pt-4 border-t border-slate-200/80 space-y-3">
         <div className="flex items-center justify-between p-2 rounded-2xl bg-white/70 border border-slate-200/60 shadow-xs">
           <div className="flex items-center gap-2.5 overflow-hidden">
-            <img
-              src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
-              alt="Avatar"
-              className="w-9 h-9 rounded-xl object-cover border border-blue-200 shadow-xs"
-            />
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt="Avatar"
+                className="w-9 h-9 rounded-xl object-cover border border-blue-200 shadow-xs"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-bold flex items-center justify-center shadow-xs text-xs uppercase shrink-0">
+                {user?.name ? user.name.charAt(0) : <User size={14} />}
+              </div>
+            )}
             <div className="truncate">
-              <p className="text-xs font-bold text-slate-800 truncate">{user?.name || 'Sara Khan'}</p>
+              <p className="text-xs font-bold text-slate-800 truncate">{user?.name || 'User'}</p>
               <p className="text-[11px] text-slate-500 truncate capitalize flex items-center gap-1">
                 {user?.role === 'worker' ? <Wrench size={10} className="text-blue-600" /> : <ShieldCheck size={10} className="text-emerald-600" />}
                 {user?.role} {user?.specialty ? `• ${user?.specialty}` : ''}

@@ -4,51 +4,12 @@ import StatusBadge from '../../components/common/StatusBadge';
 import ActionMenu from '../../components/common/ActionMenu';
 import WorkerNotificationBanner from '../../components/worker/WorkerNotificationBanner';
 import API from '../../services/api';
-import { Wrench, CheckCircle2, Clock, AlertTriangle, Star, Check, X, ShieldAlert, Lock } from 'lucide-react';
+import { Wrench, CheckCircle2, Clock, AlertTriangle, Star, Check, X, ShieldAlert, Lock, User } from 'lucide-react';
 import io from 'socket.io-client';
 
 export default function WorkerDashboard() {
-  const [tickets, setTickets] = useState([
-    {
-      _id: 'tkt_1001',
-      ticketNumber: 'TKT-1001',
-      customer: { name: 'Sara Khan', email: 'customer@demo.com', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
-      subject: 'AC cooling issue and water leaking',
-      description: 'My main office AC is leaking water continuously and not cooling properly.',
-      category: 'Appliance',
-      status: 'accepted',
-      urgency: 'High',
-      aiTriage: {
-        predictedCategory: 'Appliance',
-        suggestedUrgency: 'High',
-        aiSummary: 'Appliance leakage and cooling failure reported by customer.'
-      },
-      createdAt: '2026-08-30'
-    },
-    {
-      _id: 'tkt_1003',
-      ticketNumber: 'TKT-1003',
-      customer: { name: 'Usman Ahmed', email: 'usman@demo.com', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150' },
-      subject: 'Server connection timeout error 504',
-      description: 'Production API returning 504 gateway timeout on login route.',
-      category: 'Technical',
-      status: 'pending',
-      urgency: 'Medium',
-      aiTriage: {
-        predictedCategory: 'Technical',
-        suggestedUrgency: 'High',
-        aiSummary: 'Production server gateway timeout error.'
-      },
-      createdAt: '2026-08-30'
-    }
-  ]);
-
-  const [notification, setNotification] = useState({
-    ticketId: 'tkt_1003',
-    ticketNumber: 'TKT-1003',
-    subject: 'Server connection timeout error 504'
-  });
-
+  const [tickets, setTickets] = useState([]);
+  const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedComplaintModal, setSelectedComplaintModal] = useState(null);
   const [resolutionModalTicket, setResolutionModalTicket] = useState(null);
@@ -70,7 +31,7 @@ export default function WorkerDashboard() {
   const fetchWorkerTickets = async () => {
     try {
       const res = await API.get('/tickets');
-      if (res.data && res.data.length > 0) {
+      if (Array.isArray(res.data)) {
         setTickets(res.data);
       }
     } catch (err) {
@@ -254,26 +215,39 @@ export default function WorkerDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/70">
-                {filteredTickets.map((t) => {
-                  const isLocked = t.status === 'completed' || t.status === 'rejected';
+                {filteredTickets.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-8 text-slate-400 font-medium">
+                      No assigned tickets or pending tasks found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTickets.map((t) => {
+                    const isLocked = t.status === 'completed' || t.status === 'rejected';
 
-                  return (
-                    <tr key={t._id} className="hover:bg-blue-50/40 transition-colors">
-                      <td className="py-3.5 px-4 font-extrabold text-blue-600">{t.ticketNumber}</td>
-                      
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-2">
-                          <img
-                            src={t.customer?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'}
-                            alt="Customer"
-                            className="w-7 h-7 rounded-lg object-cover border border-slate-200"
-                          />
-                          <div>
-                            <p className="font-bold text-slate-800">{t.customer?.name || 'Customer'}</p>
-                            <p className="text-[10px] text-slate-400 font-semibold">{t.customer?.email}</p>
+                    return (
+                      <tr key={t._id} className="hover:bg-blue-50/40 transition-colors">
+                        <td className="py-3.5 px-4 font-extrabold text-blue-600">{t.ticketNumber}</td>
+                        
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-2">
+                            {t.customer?.avatar ? (
+                              <img
+                                src={t.customer.avatar}
+                                alt="Customer"
+                                className="w-7 h-7 rounded-lg object-cover border border-slate-200"
+                              />
+                            ) : (
+                              <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-bold flex items-center justify-center border border-slate-200 text-xs uppercase shrink-0">
+                                {t.customer?.name ? t.customer.name.charAt(0) : <User size={12} />}
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-bold text-slate-800">{t.customer?.name || 'Customer'}</p>
+                              <p className="text-[10px] text-slate-400 font-semibold">{t.customer?.email}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
                       <td className="py-3.5 px-4">
                         <p className="font-bold text-slate-800 text-sm truncate max-w-xs">{t.subject}</p>
@@ -356,7 +330,7 @@ export default function WorkerDashboard() {
 
                     </tr>
                   );
-                })}
+                }))}
               </tbody>
             </table>
           </div>

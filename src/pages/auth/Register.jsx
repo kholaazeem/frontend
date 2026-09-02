@@ -63,11 +63,11 @@ export default function Register() {
         {/* Role Selector Tabs */}
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700">Select Account Type</label>
-          <div className="grid grid-cols-2 gap-2 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200">
+          <div className="grid grid-cols-3 gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200">
             <button
               type="button"
               onClick={() => setRole('customer')}
-              className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              className={`py-2 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
                 role === 'customer'
                   ? 'bg-white text-blue-700 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -78,13 +78,24 @@ export default function Register() {
             <button
               type="button"
               onClick={() => setRole('worker')}
-              className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              className={`py-2 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
                 role === 'worker'
                   ? 'bg-white text-blue-700 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Wrench size={14} /> Worker / Agent
+              <Wrench size={14} /> Worker
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('admin')}
+              className={`py-2 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
+                role === 'admin'
+                  ? 'bg-white text-blue-700 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <ShieldCheck size={14} /> Admin
             </button>
           </div>
         </div>

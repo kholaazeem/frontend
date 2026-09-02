@@ -8,31 +8,7 @@ import API from '../../services/api';
 import { Ticket, PlusCircle, Clock, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, User, Star } from 'lucide-react';
 
 export default function CustomerDashboard() {
-  const [tickets, setTickets] = useState([
-    {
-      _id: 'tkt_1001',
-      ticketNumber: 'TKT-1001',
-      subject: 'AC cooling issue and water leaking',
-      description: 'My main office AC is leaking water continuously and not cooling properly.',
-      category: 'Appliance',
-      status: 'in-progress',
-      urgency: 'High',
-      assignedWorker: { name: 'Worker Ali', specialty: 'Technical', rating: 4.9, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' },
-      createdAt: '2026-08-30'
-    },
-    {
-      _id: 'tkt_1002',
-      ticketNumber: 'TKT-1002',
-      subject: 'Double charge on invoice #9921',
-      description: 'I was charged twice for the same subscription payment on my credit card.',
-      category: 'Billing',
-      status: 'pending',
-      urgency: 'High',
-      assignedWorker: { name: 'Worker Usman', specialty: 'Billing', rating: 4.8, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150' },
-      createdAt: '2026-08-29'
-    }
-  ]);
-
+  const [tickets, setTickets] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedComplaintModal, setSelectedComplaintModal] = useState(null);
@@ -47,7 +23,7 @@ export default function CustomerDashboard() {
   const fetchTickets = async () => {
     try {
       const res = await API.get('/tickets');
-      if (res.data && res.data.length > 0) {
+      if (Array.isArray(res.data)) {
         setTickets(res.data);
       }
     } catch (err) {
@@ -200,14 +176,20 @@ export default function CustomerDashboard() {
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2">
-                          <img
-                            src={t.assignedWorker?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'}
-                            alt="Worker"
-                            className="w-7 h-7 rounded-lg object-cover border border-slate-200"
-                          />
+                          {t.assignedWorker?.avatar ? (
+                            <img
+                              src={t.assignedWorker.avatar}
+                              alt="Worker"
+                              className="w-7 h-7 rounded-lg object-cover border border-slate-200"
+                            />
+                          ) : (
+                            <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-bold flex items-center justify-center border border-slate-200 text-xs uppercase shrink-0">
+                              {t.assignedWorker?.name ? t.assignedWorker.name.charAt(0) : <User size={12} />}
+                            </div>
+                          )}
                           <div>
-                            <p className="font-bold text-slate-800">{t.assignedWorker?.name || 'Worker Ali'}</p>
-                            <p className="text-[10px] text-slate-400 font-semibold">{t.assignedWorker?.specialty || 'General'}</p>
+                            <p className="font-bold text-slate-800">{t.assignedWorker?.name || 'Pending Assignment'}</p>
+                            <p className="text-[10px] text-slate-400 font-semibold">{t.assignedWorker?.specialty || t.category || 'General'}</p>
                           </div>
                         </div>
                       </td>

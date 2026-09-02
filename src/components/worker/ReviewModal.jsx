@@ -52,14 +52,20 @@ export default function ReviewModal({ isOpen, onClose, ticket, onReviewSubmitted
           
           {/* Worker Info */}
           <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-center gap-3">
-            <img
-              src={ticket.assignedWorker?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'}
-              alt="Worker"
-              className="w-10 h-10 rounded-xl object-cover border border-slate-200"
-            />
+            {ticket.assignedWorker?.avatar ? (
+              <img
+                src={ticket.assignedWorker.avatar}
+                alt="Worker"
+                className="w-10 h-10 rounded-xl object-cover border border-slate-200"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-sm uppercase shrink-0">
+                {ticket.assignedWorker?.name ? ticket.assignedWorker.name.charAt(0) : 'W'}
+              </div>
+            )}
             <div className="text-left">
-              <h4 className="font-bold text-slate-800 text-sm">{ticket.assignedWorker?.name || 'Worker Ali'}</h4>
-              <p className="text-xs text-blue-600 font-semibold">{ticket.assignedWorker?.specialty || 'Technical Specialist'}</p>
+              <h4 className="font-bold text-slate-800 text-sm">{ticket.assignedWorker?.name || 'Assigned Worker'}</h4>
+              <p className="text-xs text-blue-600 font-semibold">{ticket.assignedWorker?.specialty || 'Specialist'}</p>
             </div>
           </div>
 

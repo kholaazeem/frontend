@@ -5,11 +5,11 @@ import { Bot, Mail, Lock, Sparkles, ArrowRight, ShieldCheck, UserCheck, Wrench }
 import gsap from 'gsap';
 
 export default function Login() {
-  const [email, setEmail] = useState('customer@demo.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState('');
   
-  const { login, setDemoRole, loading } = useAuth();
+  const { login, loading } = useAuth();
   const navigate = useNavigate();
 
   const cardRef = useRef(null);
@@ -45,13 +45,6 @@ export default function Login() {
     }
   };
 
-  const handleDemoSelect = (role) => {
-    setDemoRole(role);
-    if (role === 'customer') navigate('/customer/dashboard');
-    else if (role === 'worker') navigate('/worker/dashboard');
-    else if (role === 'admin') navigate('/admin/dashboard');
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl -z-10 pointer-events-none"></div>
@@ -66,32 +59,6 @@ export default function Login() {
             SupportFlow <Sparkles className="text-blue-600 w-5 h-5 animate-pulse" />
           </h1>
           <p className="text-sm text-slate-500">AI-Powered Support Desk & Worker Portal</p>
-        </div>
-
-        <div className="bg-blue-50/80 p-3 rounded-2xl border border-blue-100 space-y-1.5 text-center">
-          <span className="text-xs font-semibold text-blue-700 flex items-center justify-center gap-1">
-            ⚡ Quick Demo Logins (One-Click):
-          </span>
-          <div className="grid grid-cols-3 gap-1.5">
-            <button
-              onClick={() => handleDemoSelect('customer')}
-              className="py-1.5 px-2 bg-white hover:bg-blue-600 hover:text-white text-slate-700 text-xs font-medium rounded-xl shadow-xs border border-slate-200 flex items-center justify-center gap-1 transition-all"
-            >
-              <UserCheck size={12} /> Customer
-            </button>
-            <button
-              onClick={() => handleDemoSelect('worker')}
-              className="py-1.5 px-2 bg-white hover:bg-blue-600 hover:text-white text-slate-700 text-xs font-medium rounded-xl shadow-xs border border-slate-200 flex items-center justify-center gap-1 transition-all"
-            >
-              <Wrench size={12} /> Worker
-            </button>
-            <button
-              onClick={() => handleDemoSelect('admin')}
-              className="py-1.5 px-2 bg-white hover:bg-blue-600 hover:text-white text-slate-700 text-xs font-medium rounded-xl shadow-xs border border-slate-200 flex items-center justify-center gap-1 transition-all"
-            >
-              <ShieldCheck size={12} /> Admin
-            </button>
-          </div>
         </div>
 
         {localError && (

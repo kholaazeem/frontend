@@ -5,31 +5,7 @@ import API from '../../services/api';
 import { ShieldCheck, Ticket, Users, CheckCircle2, Clock, Bot, Sparkles, BarChart2, Star } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const [tickets, setTickets] = useState([
-    {
-      _id: 'tkt_1001',
-      ticketNumber: 'TKT-1001',
-      customer: { name: 'Sara Khan', email: 'customer@demo.com' },
-      assignedWorker: { name: 'Worker Ali', specialty: 'Technical', rating: 4.9 },
-      subject: 'AC cooling issue and water leaking',
-      category: 'Appliance',
-      status: 'in-progress',
-      urgency: 'High',
-      createdAt: '2026-08-30'
-    },
-    {
-      _id: 'tkt_1002',
-      ticketNumber: 'TKT-1002',
-      customer: { name: 'Sara Khan', email: 'customer@demo.com' },
-      assignedWorker: { name: 'Worker Usman', specialty: 'Billing', rating: 4.8 },
-      subject: 'Double charge on invoice #9921',
-      category: 'Billing',
-      status: 'pending',
-      urgency: 'High',
-      createdAt: '2026-08-29'
-    }
-  ]);
-
+  const [tickets, setTickets] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -39,7 +15,7 @@ export default function AdminDashboard() {
   const fetchAdminTickets = async () => {
     try {
       const res = await API.get('/tickets');
-      if (res.data && res.data.length > 0) setTickets(res.data);
+      if (Array.isArray(res.data)) setTickets(res.data);
     } catch (e) {
       console.error(e);
     }
@@ -56,8 +32,8 @@ export default function AdminDashboard() {
     pending: tickets.filter(t => t.status === 'pending').length,
     inProgress: tickets.filter(t => t.status === 'in-progress' || t.status === 'accepted').length,
     completed: tickets.filter(t => t.status === 'completed').length,
-    workers: 3,
-    customers: 5
+    workers: new Set(tickets.map(t => t.assignedWorker?._id || t.assignedWorker?.name).filter(Boolean)).size,
+    customers: new Set(tickets.map(t => t.customer?._id || t.customer?.name || t.customer?.email).filter(Boolean)).size
   };
 
   return (
@@ -150,17 +126,24 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/70">
-                {filteredTickets.map((t) => (
-                  <tr key={t._id} className="hover:bg-purple-50/30 transition-colors">
-                    <td className="py-3.5 px-4 font-extrabold text-purple-700">{t.ticketNumber}</td>
-                    <td className="py-3.5 px-4 font-bold text-slate-800">{t.customer?.name || 'Customer'}</td>
-                    <td className="py-3.5 px-4">
-                      <p className="font-bold text-slate-800 text-sm truncate max-w-xs">{t.subject}</p>
-                      <span className="text-[10px] font-semibold text-slate-500">🏷️ {t.category}</span>
+                {filteredTickets.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-8 text-slate-400 font-medium">
+                      No tickets recorded in the system yet.
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-700">
-                      {t.assignedWorker?.name || 'Worker Ali'} ({t.assignedWorker?.rating || 4.9}⭐)
-                    </td>
+                  </tr>
+                ) : (
+                  filteredTickets.map((t) => (
+                    <tr key={t._id} className="hover:bg-purple-50/30 transition-colors">
+                      <td className="py-3.5 px-4 font-extrabold text-purple-700">{t.ticketNumber}</td>
+                      <td className="py-3.5 px-4 font-bold text-slate-800">{t.customer?.name || 'Customer'}</td>
+                      <td className="py-3.5 px-4">
+                        <p className="font-bold text-slate-800 text-sm truncate max-w-xs">{t.subject}</p>
+                        <span className="text-[10px] font-semibold text-slate-500">🏷️ {t.category}</span>
+                      </td>
+                      <td className="py-3.5 px-4 font-semibold text-slate-700">
+                        {t.assignedWorker ? `${t.assignedWorker.name} (${t.assignedWorker.rating || 5.0}⭐)` : 'Unassigned'}
+                      </td>
                     <td className="py-3.5 px-4">
                       <StatusBadge status={t.status} />
                     </td>
@@ -168,8 +151,9 @@ export default function AdminDashboard() {
                       {t.urgency || 'Medium'}
                     </td>
                   </tr>
-                ))}
-              </tbody>
+                ))
+              )}
+            </tbody>
             </table>
           </div>
         </div>

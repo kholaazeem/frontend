@@ -142,11 +142,17 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }) 
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <img
-                          src={worker.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'}
-                          alt={worker.name}
-                          className="w-8 h-8 rounded-xl object-cover border border-slate-200"
-                        />
+                        {worker.avatar ? (
+                          <img
+                            src={worker.avatar}
+                            alt={worker.name}
+                            className="w-8 h-8 rounded-xl object-cover border border-slate-200"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center border border-slate-200 text-xs uppercase shrink-0">
+                            {worker.name ? worker.name.charAt(0) : <UserCheck size={14} />}
+                          </div>
+                        )}
                         <div className="truncate">
                           <p className="text-xs font-bold text-slate-800 truncate">{worker.name}</p>
                           <p className="text-[10px] text-blue-600 font-semibold">{worker.specialty || 'Worker'}</p>
