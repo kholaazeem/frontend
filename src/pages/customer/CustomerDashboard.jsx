@@ -4,6 +4,7 @@ import StatusBadge from '../../components/common/StatusBadge';
 import ActionMenu from '../../components/common/ActionMenu';
 import CreateTicketModal from '../../components/tickets/CreateTicketModal';
 import ReviewModal from '../../components/worker/ReviewModal';
+import ChatWidget from '../../components/chat/ChatWidget';
 import API from '../../services/api';
 import { Ticket, PlusCircle, Clock, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, User, Star, BellRing, Sparkles, X } from 'lucide-react';
 import io from 'socket.io-client';
@@ -19,12 +20,13 @@ export default function CustomerDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const hasAutoOpenedRef = useRef({});
+  const ticketsSnapshotRef = useRef('');
 
   useEffect(() => {
     fetchTickets();
 
-    // 3-second auto-poll: Guarantees 100% reliable updates on Vercel Serverless
-    const interval = setInterval(fetchTickets, 3000);
+    // 4-second auto-poll with change-detection (no screen refresh / re-render if data is same)
+    const interval = setInterval(fetchTickets, 4000);
 
     // Live Socket.IO listener for instant 0-second updates when available
     const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
@@ -44,6 +46,13 @@ export default function CustomerDashboard() {
       const res = await API.get('/tickets');
       if (Array.isArray(res.data)) {
         const list = res.data;
+
+        // Compare lightweight snapshot so state is NOT set unless something actually changed
+        const snap = JSON.stringify(list.map(t => ({ id: t._id, status: t.status, rating: t.rating, isRated: t.isRated })));
+        if (snap === ticketsSnapshotRef.current) {
+          return;
+        }
+        ticketsSnapshotRef.current = snap;
         setTickets(list);
 
         // Build notifications list dynamically from tickets
@@ -426,6 +435,9 @@ export default function CustomerDashboard() {
           </div>
         </div>
       )}
+
+      {/* Floating AI Support Agent Chatbot */}
+      <ChatWidget onOpenCreateTicket={() => setIsModalOpen(true)} />
 
     </DashboardLayout>
   );

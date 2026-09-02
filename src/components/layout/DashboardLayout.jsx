@@ -17,15 +17,15 @@ export default function DashboardLayout({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   useEffect(() => {
-    // GSAP Stagger Entrance for main view content
+    // GSAP Stagger Entrance for main view content - runs only on initial mount
     if (contentRef.current) {
       gsap.fromTo(
         contentRef.current,
         { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }
+        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
       );
     }
-  }, [children]);
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-slate-100">

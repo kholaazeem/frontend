@@ -55,8 +55,8 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-2xl">
             <Bot size={22} className="text-blue-600" />
             <div>
-              <span className="text-[10px] text-blue-700 font-bold block uppercase">AI Dual Engine</span>
-              <span className="text-xs font-extrabold text-blue-800">Gemini 1.5 + Keyword Fallback</span>
+              <span className="text-[10px] text-blue-700 font-bold block uppercase">AI Engine Status</span>
+              <span className="text-xs font-extrabold text-blue-800">Smart Support AI Active</span>
             </div>
           </div>
         </div>

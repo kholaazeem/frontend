@@ -28,8 +28,6 @@ export default function AITriageCard({ aiData, loading }) {
 
   if (!aiData) return null;
 
-  const isGemini = aiData.method === 'gemini';
-
   return (
     <div ref={cardRef} className="glass-card p-5 rounded-2xl border border-blue-200/90 bg-gradient-to-r from-blue-50/70 via-white to-cyan-50/70 shadow-md relative overflow-hidden space-y-3">
       
@@ -47,13 +45,9 @@ export default function AITriageCard({ aiData, loading }) {
           </div>
         </div>
 
-        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-          isGemini 
-            ? 'bg-purple-50 text-purple-700 border-purple-200' 
-            : 'bg-cyan-50 text-cyan-700 border-cyan-200'
-        }`}>
-          <Zap size={10} />
-          {isGemini ? 'Gemini 1.5 AI (Primary)' : 'Keyword Array Engine (Fallback)'}
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200 shadow-2xs">
+          <Sparkles size={11} className="text-blue-600" />
+          Smart AI Analysis
         </span>
       </div>
 

@@ -17,14 +17,14 @@ export default function WorkerDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedComplaintModal, setSelectedComplaintModal] = useState(null);
   const [resolutionModalTicket, setResolutionModalTicket] = useState(null);
-  const [resolutionNoteText, setResolutionNoteText] = useState('');
   const seenReviewsRef = useRef({});
+  const workerTicketsSnapshotRef = useRef('');
 
   useEffect(() => {
     fetchWorkerTickets();
 
-    // 3-second auto-poll for real-time updates on Vercel
-    const interval = setInterval(fetchWorkerTickets, 3000);
+    // 4-second auto-poll with change-detection (no screen refresh / re-render if data is same)
+    const interval = setInterval(fetchWorkerTickets, 4000);
 
     // Socket.IO Real-time notification listener
     const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
@@ -55,6 +55,11 @@ export default function WorkerDashboard() {
       const res = await API.get('/tickets');
       if (Array.isArray(res.data)) {
         const list = res.data;
+        const snap = JSON.stringify(list.map(t => ({ id: t._id, status: t.status, rating: t.rating, urgency: t.urgency })));
+        if (snap === workerTicketsSnapshotRef.current) {
+          return;
+        }
+        workerTicketsSnapshotRef.current = snap;
         setTickets(list);
 
         // Build notifications for worker from current tickets
