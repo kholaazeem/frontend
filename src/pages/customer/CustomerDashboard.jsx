@@ -5,7 +5,8 @@ import ActionMenu from '../../components/common/ActionMenu';
 import CreateTicketModal from '../../components/tickets/CreateTicketModal';
 import ReviewModal from '../../components/worker/ReviewModal';
 import API from '../../services/api';
-import { Ticket, PlusCircle, Clock, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, User, Star } from 'lucide-react';
+import { Ticket, PlusCircle, Clock, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, User, Star, BellRing, Sparkles, X } from 'lucide-react';
+import io from 'socket.io-client';
 
 export default function CustomerDashboard() {
   const [tickets, setTickets] = useState([]);
@@ -13,11 +14,44 @@ export default function CustomerDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedComplaintModal, setSelectedComplaintModal] = useState(null);
   const [reviewModalTicket, setReviewModalTicket] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [completionAlert, setCompletionAlert] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
   useEffect(() => {
     fetchTickets();
+
+    // Live Socket.IO listener for ticket completion & updates
+    const socket = io('https://backend-iota-six-56.vercel.app');
+    
+    socket.on('ticket_status_updated', (data) => {
+      fetchTickets();
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (data.status === 'completed') {
+        const notif = {
+          title: `🎉 Task Completed: ${data.ticketNumber}`,
+          message: `Worker finished your task! Click here to submit your 5-Star review.`,
+          time: timeStr,
+          ticket: data.ticket || { _id: data.ticketId, ticketNumber: data.ticketNumber, assignedWorker: data.assignedWorkerId }
+        };
+        setNotifications(prev => [notif, ...prev]);
+        setCompletionAlert(notif);
+
+        // Auto-open rating modal immediately so customer can rate!
+        setReviewModalTicket(data.ticket || { _id: data.ticketId, ticketNumber: data.ticketNumber, assignedWorker: data.assignedWorkerId });
+      } else {
+        const notif = {
+          title: `Ticket ${data.ticketNumber} Update`,
+          message: `Status changed to ${data.status}`,
+          time: timeStr
+        };
+        setNotifications(prev => [notif, ...prev]);
+      }
+    });
+
+    return () => socket.disconnect();
   }, []);
 
   const fetchTickets = async () => {
@@ -70,10 +104,52 @@ export default function CustomerDashboard() {
   };
 
   return (
-    <DashboardLayout onSearch={setSearchQuery} onOpenCreateModal={() => setIsModalOpen(true)}>
+    <DashboardLayout
+      onSearch={setSearchQuery}
+      onOpenCreateModal={() => setIsModalOpen(true)}
+      notifications={notifications}
+      notificationCount={notifications.length}
+      onClearNotifications={() => setNotifications([])}
+      onNotificationClick={(n) => {
+        if (n.ticket) setReviewModalTicket(n.ticket);
+      }}
+    >
       
       <div className="space-y-6 max-w-7xl mx-auto">
         
+        {/* Floating Real-time Completion Banner */}
+        {completionAlert && (
+          <div className="p-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl text-white shadow-xl flex items-center justify-between gap-3 animate-fadeIn">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center font-bold">
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <p className="font-extrabold text-sm">{completionAlert.title}</p>
+                <p className="text-xs text-white/90">{completionAlert.message}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setReviewModalTicket(completionAlert.ticket);
+                  setCompletionAlert(null);
+                }}
+                className="px-4 py-1.5 bg-white text-emerald-800 font-extrabold text-xs rounded-xl shadow-md hover:bg-emerald-50 transition-all cursor-pointer flex items-center gap-1"
+              >
+                <Star size={14} fill="currentColor" className="text-amber-500" />
+                Rate Now
+              </button>
+              <button
+                onClick={() => setCompletionAlert(null)}
+                className="p-1.5 text-white/70 hover:text-white rounded-lg cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 rounded-3xl border border-white/90">
           <div>
@@ -197,12 +273,28 @@ export default function CustomerDashboard() {
                         <StatusBadge status={t.status} />
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <ActionMenu
-                          ticket={t}
-                          onViewComplaint={handleViewComplaint}
-                          onCancelRequest={handleCancelRequest}
-                          userRole="customer"
-                        />
+                        <div className="flex items-center justify-end gap-2">
+                          {t.status === 'completed' && (
+                            t.isRated || t.rating ? (
+                              <span className="px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-700 font-bold rounded-xl text-xs inline-flex items-center gap-1">
+                                <Star size={12} fill="currentColor" /> {t.rating}/5
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => setReviewModalTicket(t)}
+                                className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer animate-pulse"
+                              >
+                                <Star size={12} fill="currentColor" /> Rate Worker
+                              </button>
+                            )
+                          )}
+                          <ActionMenu
+                            ticket={t}
+                            onViewComplaint={handleViewComplaint}
+                            onCancelRequest={handleCancelRequest}
+                            userRole="customer"
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))

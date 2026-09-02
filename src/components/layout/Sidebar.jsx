@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import gsap from 'gsap';
 
-export default function Sidebar({ onOpenCreateModal }) {
+export default function Sidebar({ onOpenCreateModal, onOpenProfileModal }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const robotIconRef = useRef(null);
@@ -26,8 +26,7 @@ export default function Sidebar({ onOpenCreateModal }) {
     // Floating 3D Robot icon animation
     if (robotIconRef.current) {
       gsap.to(robotIconRef.current, {
-        y: -4,
-        rotate: 3,
+        rotate: 5,
         duration: 2.5,
         repeat: -1,
         yoyo: true,
@@ -46,23 +45,20 @@ export default function Sidebar({ onOpenCreateModal }) {
     if (user?.role === 'worker') {
       return [
         { label: 'Ticket Queue', path: '/worker/dashboard', icon: Ticket },
-        { label: 'Completed Tasks', path: '/worker/completed', icon: CheckCircle2 },
-        { label: 'My Profile', path: '/worker/profile', icon: User }
+        { label: 'Profile Settings', action: onOpenProfileModal, icon: User }
       ];
     }
     if (user?.role === 'admin') {
       return [
         { label: 'Analytics Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-        { label: 'All Tickets', path: '/admin/tickets', icon: Ticket },
-        { label: 'User Management', path: '/admin/users', icon: Users },
-        { label: 'AI Settings', path: '/admin/settings', icon: Sliders }
+        { label: 'Profile Settings', action: onOpenProfileModal, icon: User }
       ];
     }
     // Default: Customer Role
     return [
       { label: 'My Tickets', path: '/customer/dashboard', icon: Ticket },
       { label: 'Generate Ticket', action: onOpenCreateModal, icon: PlusCircle, highlight: true },
-      { label: 'Profile Settings', path: '/customer/profile', icon: User }
+      { label: 'Profile Settings', action: onOpenProfileModal, icon: User }
     ];
   };
 
@@ -129,7 +125,11 @@ export default function Sidebar({ onOpenCreateModal }) {
       {/* User Profile Mini-Card at Bottom */}
       <div className="pt-4 border-t border-slate-200/80 space-y-3">
         <div className="flex items-center justify-between p-2 rounded-2xl bg-white/70 border border-slate-200/60 shadow-xs">
-          <div className="flex items-center gap-2.5 overflow-hidden">
+          <div 
+            onClick={onOpenProfileModal}
+            className="flex items-center gap-2.5 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+            title="Click to edit Profile"
+          >
             {user?.avatar ? (
               <img
                 src={user.avatar}

@@ -4,12 +4,16 @@ import StatusBadge from '../../components/common/StatusBadge';
 import ActionMenu from '../../components/common/ActionMenu';
 import WorkerNotificationBanner from '../../components/worker/WorkerNotificationBanner';
 import API from '../../services/api';
-import { Wrench, CheckCircle2, Clock, AlertTriangle, Star, Check, X, ShieldAlert, Lock, User } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { Wrench, CheckCircle2, Clock, AlertTriangle, Star, Check, X, ShieldAlert, Lock, User, Sparkles } from 'lucide-react';
 import io from 'socket.io-client';
 
 export default function WorkerDashboard() {
+  const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [notification, setNotification] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [reviewAlert, setReviewAlert] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedComplaintModal, setSelectedComplaintModal] = useState(null);
   const [resolutionModalTicket, setResolutionModalTicket] = useState(null);
@@ -20,9 +24,27 @@ export default function WorkerDashboard() {
 
     // Socket.IO Real-time notification listener
     const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
+    
     socket.on('new_booking_notification', (data) => {
       setNotification(data);
+      const notif = {
+        title: `🚨 New Booking: ${data.ticketNumber || 'Ticket'}`,
+        message: data.subject || 'Customer requested service booking',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setNotifications(prev => [notif, ...prev]);
       fetchWorkerTickets();
+    });
+
+    socket.on('new_review_submitted', (data) => {
+      fetchWorkerTickets();
+      const notif = {
+        title: `⭐ New ${data.rating}-Star Review!`,
+        message: `${data.customerName || 'Customer'} rated: "${data.comment || 'Great service!'}"`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setNotifications(prev => [notif, ...prev]);
+      setReviewAlert(notif);
     });
 
     return () => socket.disconnect();
@@ -125,8 +147,19 @@ export default function WorkerDashboard() {
     rating: 4.9
   };
 
+  const ratedTickets = tickets.filter(t => t.rating);
+  const avgRating = ratedTickets.length > 0
+    ? (ratedTickets.reduce((acc, t) => acc + t.rating, 0) / ratedTickets.length).toFixed(1)
+    : (user?.rating || 5.0);
+  const totalReviews = ratedTickets.length > 0 ? ratedTickets.length : (user?.reviewCount || 0);
+
   return (
-    <DashboardLayout onSearch={setSearchQuery}>
+    <DashboardLayout
+      onSearch={setSearchQuery}
+      notifications={notifications}
+      notificationCount={notifications.length}
+      onClearNotifications={() => setNotifications([])}
+    >
       
       <div className="space-y-6 max-w-7xl mx-auto">
         
@@ -137,6 +170,27 @@ export default function WorkerDashboard() {
           onReject={handleRejectBooking}
           onClose={() => setNotification(null)}
         />
+
+        {/* Floating Customer Review Alert Banner */}
+        {reviewAlert && (
+          <div className="p-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-white shadow-xl flex items-center justify-between gap-3 animate-fadeIn">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center font-bold">
+                <Star size={22} fill="currentColor" />
+              </div>
+              <div>
+                <p className="font-extrabold text-sm">{reviewAlert.title}</p>
+                <p className="text-xs text-white/90">{reviewAlert.message}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setReviewAlert(null)}
+              className="p-1.5 text-white/70 hover:text-white rounded-lg cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         {/* Worker Header Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 rounded-3xl border border-white/90">
@@ -154,7 +208,7 @@ export default function WorkerDashboard() {
             <Star size={18} className="text-amber-500 fill-amber-500" />
             <div>
               <span className="text-[10px] text-amber-700 font-bold block uppercase">Worker Rating</span>
-              <span className="text-sm font-extrabold text-amber-800">4.9 / 5.0 ⭐ (24 Reviews)</span>
+              <span className="text-sm font-extrabold text-amber-800">{avgRating} / 5.0 ⭐ ({totalReviews} {totalReviews === 1 ? 'Review' : 'Reviews'})</span>
             </div>
           </div>
         </div>
@@ -211,6 +265,7 @@ export default function WorkerDashboard() {
                   <th className="py-3 px-4">Subject & AI Triage</th>
                   <th className="py-3 px-4">Urgency Level</th>
                   <th className="py-3 px-4">Task Status</th>
+                  <th className="py-3 px-4">Customer Rating</th>
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -298,6 +353,26 @@ export default function WorkerDashboard() {
                             <option value="completed">Completed ✅</option>
                             <option value="rejected">Rejected ❌</option>
                           </select>
+                        )}
+                      </td>
+
+                      {/* Customer Rating & Review */}
+                      <td className="py-3.5 px-4">
+                        {t.rating ? (
+                          <div className="space-y-0.5">
+                            <span className="inline-flex items-center gap-1 font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+                              <Star size={11} fill="currentColor" /> {t.rating} / 5
+                            </span>
+                            {t.reviewComment && (
+                              <p className="text-[10px] text-slate-500 italic truncate max-w-[150px]" title={t.reviewComment}>
+                                "{t.reviewComment}"
+                              </p>
+                            )}
+                          </div>
+                        ) : t.status === 'completed' ? (
+                          <span className="text-[11px] text-slate-400 font-medium">Awaiting review</span>
+                        ) : (
+                          <span className="text-[11px] text-slate-300">—</span>
                         )}
                       </td>
 

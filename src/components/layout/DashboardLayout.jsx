@@ -1,10 +1,20 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import ProfileModal from '../profile/ProfileModal';
 import gsap from 'gsap';
 
-export default function DashboardLayout({ children, onSearch, onOpenCreateModal, notificationCount = 2 }) {
+export default function DashboardLayout({ 
+  children, 
+  onSearch, 
+  onOpenCreateModal, 
+  notifications = [], 
+  notificationCount = 0,
+  onClearNotifications,
+  onNotificationClick
+}) {
   const contentRef = useRef(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   useEffect(() => {
     // GSAP Stagger Entrance for main view content
@@ -21,7 +31,10 @@ export default function DashboardLayout({ children, onSearch, onOpenCreateModal,
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-slate-100">
       
       {/* Fixed Sidebar */}
-      <Sidebar onOpenCreateModal={onOpenCreateModal} />
+      <Sidebar 
+        onOpenCreateModal={onOpenCreateModal} 
+        onOpenProfileModal={() => setIsProfileOpen(true)}
+      />
 
       {/* Main Right Content Section */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -30,7 +43,10 @@ export default function DashboardLayout({ children, onSearch, onOpenCreateModal,
         <Navbar
           onSearch={onSearch}
           onOpenCreateModal={onOpenCreateModal}
+          notifications={notifications}
           notificationCount={notificationCount}
+          onClearNotifications={onClearNotifications}
+          onNotificationClick={onNotificationClick}
         />
 
         {/* Dynamic Page Content */}
@@ -38,6 +54,12 @@ export default function DashboardLayout({ children, onSearch, onOpenCreateModal,
           {children}
         </main>
       </div>
+
+      {/* Profile Settings Modal */}
+      <ProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+      />
 
     </div>
   );

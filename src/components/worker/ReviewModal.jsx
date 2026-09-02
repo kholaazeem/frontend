@@ -14,9 +14,10 @@ export default function ReviewModal({ isOpen, onClose, ticket, onReviewSubmitted
     e.preventDefault();
     setSubmitting(true);
     try {
+      const workerId = ticket.assignedWorker?._id || (typeof ticket.assignedWorker === 'string' ? ticket.assignedWorker : null);
       await API.post('/reviews', {
         ticketId: ticket._id,
-        workerId: ticket.assignedWorker?._id || 'user_work_1',
+        workerId: workerId || 'worker_default',
         rating,
         comment
       });

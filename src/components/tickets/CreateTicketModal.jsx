@@ -8,9 +8,28 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }) 
   const [description, setDescription] = useState('');
   const [aiData, setAiData] = useState(null);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [allWorkers, setAllWorkers] = useState([]);
   const [selectedWorkerId, setSelectedWorkerId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Fetch all registered workers on modal open
+  useEffect(() => {
+    if (isOpen) {
+      fetchWorkers();
+    }
+  }, [isOpen]);
+
+  const fetchWorkers = async () => {
+    try {
+      const res = await API.get('/auth/workers');
+      if (Array.isArray(res.data)) {
+        setAllWorkers(res.data);
+      }
+    } catch (err) {
+      console.error('Fetch workers error:', err);
+    }
+  };
 
   // Debounced AI Triage Trigger as customer types description
   useEffect(() => {
@@ -24,7 +43,7 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }) 
       try {
         const res = await API.post('/tickets/triage-preview', { subject, description });
         setAiData(res.data);
-        if (res.data.suggestedWorkers && res.data.suggestedWorkers.length > 0) {
+        if (res.data.suggestedWorkers && res.data.suggestedWorkers.length > 0 && !selectedWorkerId) {
           setSelectedWorkerId(res.data.suggestedWorkers[0]._id);
         }
       } catch (err) {
@@ -121,16 +140,34 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }) 
           {/* Step 2: AI Triage Live Preview Card */}
           <AITriageCard aiData={aiData} loading={loadingAI} />
 
-          {/* Step 3: Suggested Worker Selection Grid (Miss's exact requirement!) */}
-          {aiData?.suggestedWorkers && aiData.suggestedWorkers.length > 0 && (
-            <div className="space-y-2 pt-2 border-t border-slate-200/80">
+          {/* Step 3: Worker Selection Grid */}
+          <div className="space-y-2 pt-2 border-t border-slate-200/80">
+            <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                 <UserCheck size={16} className="text-blue-600" />
-                Select Suggested Worker for Booking:
+                Select Worker for Booking:
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                {aiData.suggestedWorkers.map((worker) => {
+              {selectedWorkerId && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedWorkerId(null)}
+                  className="text-[11px] text-blue-600 hover:underline font-semibold cursor-pointer"
+                >
+                  Auto-assign by System
+                </button>
+              )}
+            </div>
+
+            {allWorkers.length === 0 && (!aiData?.suggestedWorkers || aiData.suggestedWorkers.length === 0) ? (
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl text-center text-xs text-slate-500">
+                No workers registered in system yet. Ticket will be queued for assignment upon creation.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto pr-1">
+                {(allWorkers.length > 0 ? allWorkers : aiData.suggestedWorkers).map((worker) => {
                   const isSelected = selectedWorkerId === worker._id;
+                  const isRecommended = aiData?.predictedCategory && (worker.specialty === aiData.predictedCategory);
+
                   return (
                     <div
                       key={worker._id}
@@ -159,6 +196,12 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }) 
                         </div>
                       </div>
 
+                      {isRecommended && (
+                        <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-md inline-block text-center border border-emerald-200">
+                          ✨ AI Recommended
+                        </span>
+                      )}
+
                       <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100">
                         <span className="flex items-center gap-0.5 text-amber-600 font-bold">
                           <Star size={12} fill="currentColor" /> {worker.rating || 5.0}
@@ -175,8 +218,8 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }) 
                   );
                 })}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Submit Action Button */}
           <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
