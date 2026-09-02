@@ -139,15 +139,25 @@ export default function CustomerDashboard() {
     }
   };
 
-  // Search filter
-  const filteredTickets = tickets.filter(t => 
-    t.ticketNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.status?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.category?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [statusFilter, setStatusFilter] = useState('all');
 
-  // Pagination logic matching Miss's bottom Pagination box
+  // Search and status filter
+  const filteredTickets = tickets.filter(t => {
+    const matchesSearch = 
+      t.ticketNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.status?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.category?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (!matchesSearch) return false;
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'pending') return t.status === 'pending';
+    if (statusFilter === 'in-progress') return t.status === 'in-progress' || t.status === 'accepted';
+    if (statusFilter === 'completed') return t.status === 'completed' || t.status === 'resolved';
+    return true;
+  });
+
+  // Pagination logic matching wireframe
   const totalPages = Math.ceil(filteredTickets.length / itemsPerPage) || 1;
   const paginatedTickets = filteredTickets.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -174,10 +184,10 @@ export default function CustomerDashboard() {
         
         {/* Floating Real-time Completion Banner */}
         {completionAlert && (
-          <div className="p-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl text-white shadow-xl flex items-center justify-between gap-3 animate-fadeIn">
+          <div className="p-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 rounded-2xl text-white shadow-lg shadow-emerald-600/10 flex items-center justify-between gap-3 animate-fadeIn border border-emerald-400/30">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center font-bold">
-                <Sparkles size={20} />
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center font-bold">
+                <Sparkles size={20} className="text-amber-300" />
               </div>
               <div>
                 <p className="font-extrabold text-sm">{completionAlert.title}</p>
@@ -190,10 +200,10 @@ export default function CustomerDashboard() {
                   setReviewModalTicket(completionAlert.ticket);
                   setCompletionAlert(null);
                 }}
-                className="px-4 py-1.5 bg-white text-emerald-800 font-extrabold text-xs rounded-xl shadow-md hover:bg-emerald-50 transition-all cursor-pointer flex items-center gap-1"
+                className="px-4 py-1.5 bg-white text-emerald-800 font-extrabold text-xs rounded-xl shadow-sm hover:bg-emerald-50 transition-all cursor-pointer flex items-center gap-1.5"
               >
-                <Star size={14} fill="currentColor" className="text-amber-500" />
-                Rate Now
+                <Star size={13} fill="currentColor" className="text-amber-500" />
+                Rate Worker
               </button>
               <button
                 onClick={() => setCompletionAlert(null)}
@@ -205,154 +215,240 @@ export default function CustomerDashboard() {
           </div>
         )}
 
-        {/* Banner */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 rounded-3xl border border-white/90">
+        {/* Executive Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 rounded-2xl border border-slate-200/90">
           <div>
-            <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Customer Desk Dashboard</h1>
-            <p className="text-xs text-slate-500 mt-1">Manage your support tickets, AI suggestions, and worker bookings</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                Customer Workspace
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium">Real-time Service Desk</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Support & Bookings Console</h1>
+            <p className="text-xs text-slate-500 mt-0.5">Track active complaints, monitor worker progress, and submit ratings</p>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="btn-primary px-4 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 shadow-md cursor-pointer self-start sm:self-auto"
+            className="btn-primary px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm cursor-pointer self-start sm:self-auto"
           >
-            <PlusCircle size={18} />
+            <PlusCircle size={16} />
             <span>Generate New Ticket</span>
           </button>
         </div>
 
-        {/* 4 Stats Cards */}
+        {/* 4 Executive Metric Cards (Clickable Filter Controls) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="glass-card p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold">
-              <Ticket size={20} />
+          <div 
+            onClick={() => { setStatusFilter('all'); setCurrentPage(1); }}
+            className={`glass-card p-4 rounded-2xl cursor-pointer transition-all ${
+              statusFilter === 'all' ? 'ring-2 ring-indigo-500/50 bg-indigo-50/20' : ''
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-500 font-semibold">Total Requests</span>
+              <div className="w-8 h-8 bg-slate-100 text-slate-700 rounded-xl flex items-center justify-center font-bold">
+                <Ticket size={16} />
+              </div>
             </div>
-            <div>
-              <span className="text-xs text-slate-500 font-medium">Total Tickets</span>
-              <p className="text-xl font-black text-slate-800">{stats.total}</p>
-            </div>
+            <p className="text-2xl font-black text-slate-900 tracking-tight">{stats.total}</p>
+            <span className="text-[10px] text-slate-400 font-medium mt-1 block">All lifetime tickets</span>
           </div>
 
-          <div className="glass-card p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center font-bold">
-              <AlertCircle size={20} />
+          <div 
+            onClick={() => { setStatusFilter('pending'); setCurrentPage(1); }}
+            className={`glass-card p-4 rounded-2xl cursor-pointer transition-all ${
+              statusFilter === 'pending' ? 'ring-2 ring-amber-500/50 bg-amber-50/20' : ''
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-500 font-semibold">Pending Action</span>
+              <div className="w-8 h-8 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center font-bold">
+                <AlertCircle size={16} />
+              </div>
             </div>
-            <div>
-              <span className="text-xs text-slate-500 font-medium font-medium">Pending Bookings</span>
-              <p className="text-xl font-black text-slate-800">{stats.pending}</p>
-            </div>
+            <p className="text-2xl font-black text-slate-900 tracking-tight">{stats.pending}</p>
+            <span className="text-[10px] text-amber-600 font-semibold mt-1 block">Awaiting worker dispatch</span>
           </div>
 
-          <div className="glass-card p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold">
-              <Clock size={20} />
+          <div 
+            onClick={() => { setStatusFilter('in-progress'); setCurrentPage(1); }}
+            className={`glass-card p-4 rounded-2xl cursor-pointer transition-all ${
+              statusFilter === 'in-progress' ? 'ring-2 ring-blue-500/50 bg-blue-50/20' : ''
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-500 font-semibold">In Progress</span>
+              <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-bold">
+                <Clock size={16} />
+              </div>
             </div>
-            <div>
-              <span className="text-xs text-slate-500 font-medium">In Progress</span>
-              <p className="text-xl font-black text-slate-800">{stats.inProgress}</p>
-            </div>
+            <p className="text-2xl font-black text-slate-900 tracking-tight">{stats.inProgress}</p>
+            <span className="text-[10px] text-blue-600 font-semibold mt-1 block">Under active resolution</span>
           </div>
 
-          <div className="glass-card p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
-              <CheckCircle2 size={20} />
+          <div 
+            onClick={() => { setStatusFilter('completed'); setCurrentPage(1); }}
+            className={`glass-card p-4 rounded-2xl cursor-pointer transition-all ${
+              statusFilter === 'completed' ? 'ring-2 ring-emerald-500/50 bg-emerald-50/20' : ''
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-500 font-semibold">Resolved</span>
+              <div className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
+                <CheckCircle2 size={16} />
+              </div>
             </div>
-            <div>
-              <span className="text-xs text-slate-500 font-medium">Completed</span>
-              <p className="text-xl font-black text-slate-800">{stats.completed}</p>
-            </div>
+            <p className="text-2xl font-black text-slate-900 tracking-tight">{stats.completed}</p>
+            <span className="text-[10px] text-emerald-600 font-semibold mt-1 block">Completed & verified</span>
           </div>
         </div>
 
-        {/* MAIN TICKETS TABLE - Matches Miss's Image 1 Wireframe! */}
-        <div className="glass-panel rounded-3xl border border-white/90 shadow-lg overflow-hidden space-y-4">
+        {/* Modern Tickets Directory Table */}
+        <div className="glass-panel rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
           
-          <div className="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
-            <h3 className="font-extrabold text-slate-800 text-base">My Tickets & Bookings</h3>
-            <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-              Showing {paginatedTickets.length} of {filteredTickets.length}
-            </span>
+          <div className="px-6 py-4 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/70">
+            <div>
+              <h3 className="font-extrabold text-slate-900 text-sm">Service Bookings & Complaints</h3>
+              <p className="text-[11px] text-slate-400 font-medium">Click on any ticket to inspect AI summary and details</p>
+            </div>
+
+            {/* Status Filter Tab Pills */}
+            <div className="flex items-center gap-1 p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 self-start sm:self-auto">
+              {[
+                { id: 'all', label: 'All', count: stats.total },
+                { id: 'pending', label: 'Pending', count: stats.pending },
+                { id: 'in-progress', label: 'Active', count: stats.inProgress },
+                { id: 'completed', label: 'Resolved', count: stats.completed },
+              ].map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => { setStatusFilter(f.id); setCurrentPage(1); }}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    statusFilter === f.id
+                      ? 'bg-white text-indigo-700 shadow-2xs border border-slate-200/70'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <span>{f.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    statusFilter === f.id ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200/70 text-slate-500'
+                  }`}>
+                    {f.count}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
+                <tr className="bg-slate-50/90 border-b border-slate-200/80 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                   <th className="py-3 px-4">Ticket ID</th>
-                  <th className="py-3 px-4">Subject / Issue</th>
+                  <th className="py-3 px-4">Subject & Details</th>
                   <th className="py-3 px-4">Category</th>
                   <th className="py-3 px-4">Assigned Worker</th>
                   <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">User Actions</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200/70">
+              <tbody className="divide-y divide-slate-100">
                 {paginatedTickets.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-slate-400 font-medium">
-                      No tickets found. Click "Generate Ticket" to create one!
+                    <td colSpan={6} className="text-center py-12 text-slate-400 font-medium space-y-2">
+                      <Ticket size={28} className="mx-auto opacity-30 text-slate-400" />
+                      <p className="text-sm font-bold text-slate-600">No tickets found in this view</p>
+                      <p className="text-xs text-slate-400">Try selecting another filter or click "Generate New Ticket" to create one.</p>
                     </td>
                   </tr>
                 ) : (
-                  paginatedTickets.map((t) => (
-                    <tr key={t._id} className="hover:bg-blue-50/40 transition-colors">
-                      <td className="py-3.5 px-4 font-extrabold text-blue-600">{t.ticketNumber}</td>
-                      <td className="py-3.5 px-4">
-                        <p className="font-bold text-slate-800 text-sm truncate max-w-xs">{t.subject}</p>
-                        <p className="text-[11px] text-slate-400 truncate max-w-xs">{t.description}</p>
-                      </td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-700">
-                        <span className="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-[11px]">
-                          🏷️ {t.category}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-2">
-                          {t.assignedWorker?.avatar ? (
-                            <img
-                              src={t.assignedWorker.avatar}
-                              alt="Worker"
-                              className="w-7 h-7 rounded-lg object-cover border border-slate-200"
-                            />
-                          ) : (
-                            <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-bold flex items-center justify-center border border-slate-200 text-xs uppercase shrink-0">
-                              {t.assignedWorker?.name ? t.assignedWorker.name.charAt(0) : <User size={12} />}
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-bold text-slate-800">{t.assignedWorker?.name || 'Pending Assignment'}</p>
-                            <p className="text-[10px] text-slate-400 font-semibold">{t.assignedWorker?.specialty || t.category || 'General'}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <StatusBadge status={t.status} />
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {t.status === 'completed' && (
-                            t.isRated || t.rating ? (
-                              <span className="px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-700 font-bold rounded-xl text-xs inline-flex items-center gap-1">
-                                <Star size={12} fill="currentColor" /> {t.rating}/5
-                              </span>
+                  paginatedTickets.map((t) => {
+                    const isAppliance = t.category?.toLowerCase().includes('appliance');
+                    const isBilling = t.category?.toLowerCase().includes('billing');
+                    const isTech = t.category?.toLowerCase().includes('technical');
+
+                    return (
+                      <tr key={t._id} className="hover:bg-slate-50/70 transition-colors group">
+                        <td className="py-3.5 px-4 font-extrabold text-indigo-600">
+                          <button
+                            onClick={() => handleViewComplaint(t)}
+                            className="hover:underline cursor-pointer"
+                            title="Click to view details"
+                          >
+                            {t.ticketNumber}
+                          </button>
+                        </td>
+                        <td className="py-3.5 px-4 max-w-xs">
+                          <p 
+                            onClick={() => handleViewComplaint(t)}
+                            className="font-bold text-slate-900 text-xs truncate hover:text-indigo-600 cursor-pointer"
+                          >
+                            {t.subject}
+                          </p>
+                          <p className="text-[11px] text-slate-400 truncate mt-0.5">{t.description}</p>
+                        </td>
+                        <td className="py-3.5 px-4 font-semibold">
+                          <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border inline-block ${
+                            isAppliance 
+                              ? 'bg-amber-50 text-amber-700 border-amber-200/80' 
+                              : isBilling 
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+                              : isTech
+                              ? 'bg-violet-50 text-violet-700 border-violet-200/80'
+                              : 'bg-slate-100 text-slate-700 border-slate-200'
+                          }`}>
+                            {t.category || 'General'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-2">
+                            {t.assignedWorker?.avatar ? (
+                              <img
+                                src={t.assignedWorker.avatar}
+                                alt="Worker"
+                                className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0"
+                              />
                             ) : (
-                              <button
-                                onClick={() => setReviewModalTicket(t)}
-                                className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer animate-pulse"
-                              >
-                                <Star size={12} fill="currentColor" /> Rate Worker
-                              </button>
-                            )
-                          )}
-                          <ActionMenu
-                            ticket={t}
-                            onViewComplaint={handleViewComplaint}
-                            onCancelRequest={handleCancelRequest}
-                            userRole="customer"
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                              <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center border border-indigo-100 text-[11px] uppercase shrink-0">
+                                {t.assignedWorker?.name ? t.assignedWorker.name.charAt(0) : <User size={12} />}
+                              </div>
+                            )}
+                            <div className="truncate">
+                              <p className="font-bold text-slate-800 text-xs truncate">{t.assignedWorker?.name || 'Auto Dispatch'}</p>
+                              <p className="text-[10px] text-slate-400 font-medium truncate">{t.assignedWorker?.specialty || t.category || 'Specialist'}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <StatusBadge status={t.status} />
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {t.status === 'completed' && (
+                              t.isRated || t.rating ? (
+                                <span className="px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-700 font-bold rounded-lg text-xs inline-flex items-center gap-1">
+                                  <Star size={11} fill="currentColor" /> {t.rating}/5
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => setReviewModalTicket(t)}
+                                  className="px-2.5 py-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-lg text-xs inline-flex items-center gap-1 shadow-xs transition-all cursor-pointer animate-pulse"
+                                >
+                                  <Star size={11} fill="currentColor" /> Rate Worker
+                                </button>
+                              )
+                            )}
+                            <ActionMenu
+                              ticket={t}
+                              onViewComplaint={handleViewComplaint}
+                              onCancelRequest={handleCancelRequest}
+                              userRole="customer"
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

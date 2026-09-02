@@ -90,34 +90,34 @@ export default function ChatWidget({ onOpenCreateTicket }) {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="group flex items-center gap-2.5 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-2xl hover:shadow-blue-500/30 hover:scale-105 transition-all duration-300 cursor-pointer"
+          className="group flex items-center gap-2.5 px-4 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-full shadow-xl hover:shadow-2xl hover:scale-102 transition-all duration-200 cursor-pointer border border-slate-700/60"
         >
           <div className="relative">
-            <Bot size={22} className="animate-bounce" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full"></span>
+            <Bot size={18} className="text-indigo-400" />
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 border border-slate-900 rounded-full animate-pulse"></span>
           </div>
-          <span className="font-bold text-xs pr-1">Chat with AI Agent</span>
-          <Sparkles size={14} className="text-amber-300" />
+          <span className="font-bold text-xs pr-0.5">AI Copilot</span>
+          <span className="text-[10px] bg-indigo-500/30 text-indigo-200 font-bold px-1.5 py-0.5 rounded-full border border-indigo-400/30">Live</span>
         </button>
       )}
 
       {/* Floating Chat Window */}
       {isOpen && (
-        <div className="w-80 sm:w-96 h-[500px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden animate-fadeIn">
+        <div className="w-80 sm:w-96 h-[520px] bg-white rounded-2xl shadow-[0_25px_60px_-15px_rgba(15,23,42,0.2)] border border-slate-200/90 flex flex-col overflow-hidden animate-fadeIn">
           
           {/* Header */}
-          <div className="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between shadow-xs">
+          <div className="p-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center font-bold">
-                <Bot size={20} />
+              <div className="w-8 h-8 bg-gradient-to-tr from-indigo-500 to-blue-500 rounded-xl flex items-center justify-center font-bold text-white shadow-2xs">
+                <Bot size={16} />
               </div>
               <div>
-                <h4 className="font-extrabold text-sm leading-tight flex items-center gap-1.5">
-                  SupportFlow AI Agent <Sparkles size={12} className="text-amber-300" />
+                <h4 className="font-extrabold text-xs leading-tight flex items-center gap-1.5">
+                  SupportFlow AI Copilot
                 </h4>
-                <div className="flex items-center gap-1 text-[11px] text-blue-100 font-medium">
-                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                  <span>Online & Ready to Help</span>
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                  <span>Instant Assistance</span>
                 </div>
               </div>
             </div>
@@ -125,10 +125,10 @@ export default function ChatWidget({ onOpenCreateTicket }) {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 hover:bg-white/15 rounded-lg transition-colors cursor-pointer text-white/80 hover:text-white"
+                className="p-1 hover:bg-white/10 rounded-lg transition-colors cursor-pointer text-slate-400 hover:text-white"
                 title="Close chat"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
           </div>

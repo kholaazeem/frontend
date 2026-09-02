@@ -232,87 +232,100 @@ export default function WorkerDashboard() {
         )}
 
         {/* Worker Header Banner */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 rounded-3xl border border-white/90">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 rounded-2xl border border-slate-200/90">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
-              👷 Worker / Agent Portal
-            </span>
-            <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight mt-1.5">
-              Assigned Bookings & Task Queue
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                Specialist Console
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium">Field Dispatch & Resolution Queue</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              Assigned Work Orders & Bookings
             </h1>
-            <p className="text-xs text-slate-500">Review bookings, accept/reject, set urgency, and update task status</p>
+            <p className="text-xs text-slate-500 mt-0.5">Manage incoming assignments, update task states, and review client feedback</p>
           </div>
 
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-4 py-2 rounded-2xl">
-            <Star size={18} className="text-amber-500 fill-amber-500" />
+          <div className="flex items-center gap-3 bg-gradient-to-r from-amber-50 to-orange-50/60 border border-amber-200/80 px-4 py-2.5 rounded-2xl shadow-2xs">
+            <div className="w-9 h-9 bg-amber-500 text-white rounded-xl flex items-center justify-center font-bold shadow-xs">
+              <Star size={16} fill="currentColor" />
+            </div>
             <div>
-              <span className="text-[10px] text-amber-700 font-bold block uppercase">Worker Rating</span>
-              <span className="text-sm font-extrabold text-amber-800">{avgRating} / 5.0 ⭐ ({totalReviews} {totalReviews === 1 ? 'Review' : 'Reviews'})</span>
+              <span className="text-[10px] text-amber-800 font-bold block uppercase tracking-wider">Performance Rating</span>
+              <span className="text-xs font-black text-slate-900">{avgRating} / 5.0 ⭐ <span className="text-slate-400 font-normal">({totalReviews} reviews)</span></span>
             </div>
           </div>
         </div>
 
-        {/* 3 Stats Cards */}
+        {/* 3 Executive Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="glass-card p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold">
-              <Wrench size={20} />
+          <div className="glass-card p-4 rounded-2xl">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-500 font-semibold">Total Assigned</span>
+              <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-bold">
+                <Wrench size={16} />
+              </div>
             </div>
-            <div>
-              <span className="text-xs text-slate-500 font-medium">Assigned Tasks</span>
-              <p className="text-xl font-black text-slate-800">{stats.assigned}</p>
-            </div>
+            <p className="text-2xl font-black text-slate-900 tracking-tight">{stats.assigned}</p>
+            <span className="text-[10px] text-slate-400 font-medium mt-1 block">Active work orders</span>
           </div>
 
-          <div className="glass-card p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold">
-              <Clock size={20} />
+          <div className="glass-card p-4 rounded-2xl">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-500 font-semibold">In Progress</span>
+              <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-bold">
+                <Clock size={16} />
+              </div>
             </div>
-            <div>
-              <span className="text-xs text-slate-500 font-medium">In Progress</span>
-              <p className="text-xl font-black text-slate-800">{stats.inProgress}</p>
-            </div>
+            <p className="text-2xl font-black text-slate-900 tracking-tight">{stats.inProgress}</p>
+            <span className="text-[10px] text-indigo-600 font-semibold mt-1 block">Under active service</span>
           </div>
 
-          <div className="glass-card p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
-              <CheckCircle2 size={20} />
+          <div className="glass-card p-4 rounded-2xl">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-500 font-semibold">Resolved</span>
+              <div className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
+                <CheckCircle2 size={16} />
+              </div>
             </div>
-            <div>
-              <span className="text-xs text-slate-500 font-medium">Completed</span>
-              <p className="text-xl font-black text-slate-800">{stats.completedToday}</p>
-            </div>
+            <p className="text-2xl font-black text-slate-900 tracking-tight">{stats.completedToday}</p>
+            <span className="text-[10px] text-emerald-600 font-semibold mt-1 block">Completed & signed off</span>
           </div>
         </div>
 
-        {/* WORKER TASK QUEUE TABLE - Matches Miss's Flow! */}
-        <div className="glass-panel rounded-3xl border border-white/90 shadow-lg overflow-hidden space-y-4">
+        {/* WORKER TASK QUEUE TABLE */}
+        <div className="glass-panel rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
           
-          <div className="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
-            <h3 className="font-extrabold text-slate-800 text-base">Booking Requests & Tasks</h3>
-            <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-              Showing {filteredTickets.length} tasks
+          <div className="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between bg-white/70">
+            <div>
+              <h3 className="font-extrabold text-slate-900 text-sm">Active Job Queue</h3>
+              <p className="text-[11px] text-slate-400 font-medium">Update urgency and progress status directly from the queue</p>
+            </div>
+            <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+              {filteredTickets.length} {filteredTickets.length === 1 ? 'task' : 'tasks'}
             </span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
+                <tr className="bg-slate-50/90 border-b border-slate-200/80 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                   <th className="py-3 px-4">Ticket ID</th>
                   <th className="py-3 px-4">Customer</th>
-                  <th className="py-3 px-4">Subject & AI Triage</th>
-                  <th className="py-3 px-4">Urgency Level</th>
-                  <th className="py-3 px-4">Task Status</th>
+                  <th className="py-3 px-4">Subject & AI Diagnosis</th>
+                  <th className="py-3 px-4">Urgency</th>
+                  <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Customer Rating</th>
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200/70">
+              <tbody className="divide-y divide-slate-100">
                 {filteredTickets.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-8 text-slate-400 font-medium">
-                      No assigned tickets or pending tasks found.
+                    <td colSpan={7} className="text-center py-12 text-slate-400 font-medium space-y-2">
+                      <Wrench size={28} className="mx-auto opacity-30 text-slate-400" />
+                      <p className="text-sm font-bold text-slate-600">No assigned work orders right now</p>
+                      <p className="text-xs text-slate-400">New customer bookings assigned to you will appear here instantly.</p>
                     </td>
                   </tr>
                 ) : (
