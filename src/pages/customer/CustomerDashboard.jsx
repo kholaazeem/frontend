@@ -4,9 +4,10 @@ import StatusBadge from '../../components/common/StatusBadge';
 import ActionMenu from '../../components/common/ActionMenu';
 import CreateTicketModal from '../../components/tickets/CreateTicketModal';
 import ReviewModal from '../../components/worker/ReviewModal';
+import TicketChatModal from '../../components/tickets/TicketChatModal';
 import ChatWidget from '../../components/chat/ChatWidget';
 import API from '../../services/api';
-import { Ticket, PlusCircle, Clock, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, User, Star, BellRing, Sparkles, X } from 'lucide-react';
+import { Ticket, PlusCircle, Clock, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, User, Star, BellRing, Sparkles, X, MessageSquare } from 'lucide-react';
 import io from 'socket.io-client';
 
 export default function CustomerDashboard() {
@@ -15,6 +16,7 @@ export default function CustomerDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedComplaintModal, setSelectedComplaintModal] = useState(null);
   const [reviewModalTicket, setReviewModalTicket] = useState(null);
+  const [chatTicket, setChatTicket] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [completionAlert, setCompletionAlert] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,6 +34,14 @@ export default function CustomerDashboard() {
     const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
     
     socket.on('ticket_status_updated', () => {
+      fetchTickets();
+    });
+
+    socket.on('ticket_message_received', () => {
+      fetchTickets();
+    });
+
+    socket.on('ticket_ai_reviewed', () => {
       fetchTickets();
     });
 
@@ -151,8 +161,8 @@ export default function CustomerDashboard() {
 
     if (!matchesSearch) return false;
     if (statusFilter === 'all') return true;
-    if (statusFilter === 'pending') return t.status === 'pending';
-    if (statusFilter === 'in-progress') return t.status === 'in-progress' || t.status === 'accepted';
+    if (statusFilter === 'pending') return t.status === 'pending' || t.status === 'new';
+    if (statusFilter === 'in-progress') return t.status === 'in-progress' || t.status === 'accepted' || t.status === 'assigned';
     if (statusFilter === 'completed') return t.status === 'completed' || t.status === 'resolved';
     return true;
   });
@@ -163,8 +173,8 @@ export default function CustomerDashboard() {
 
   const stats = {
     total: tickets.length,
-    pending: tickets.filter(t => t.status === 'pending').length,
-    inProgress: tickets.filter(t => t.status === 'in-progress' || t.status === 'accepted').length,
+    pending: tickets.filter(t => t.status === 'pending' || t.status === 'new').length,
+    inProgress: tickets.filter(t => t.status === 'in-progress' || t.status === 'accepted' || t.status === 'assigned').length,
     completed: tickets.filter(t => t.status === 'completed' || t.status === 'resolved').length
   };
 
@@ -423,7 +433,21 @@ export default function CustomerDashboard() {
                           <StatusBadge status={t.status} />
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Direct Message to Assigned Support Agent (Hackathon Demo Step 5) */}
+                            <button
+                              onClick={() => setChatTicket(t)}
+                              className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-bold transition-all cursor-pointer relative"
+                              title="Message Support Agent"
+                            >
+                              <MessageSquare size={13} />
+                              {t.messages && t.messages.length > 0 && (
+                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-600 text-white rounded-full text-[8px] flex items-center justify-center font-bold">
+                                  {t.messages.length}
+                                </span>
+                              )}
+                            </button>
+
                             {t.status === 'completed' && (
                               t.isRated || t.rating ? (
                                 <span className="px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-700 font-bold rounded-lg text-xs inline-flex items-center gap-1">
@@ -520,7 +544,18 @@ export default function CustomerDashboard() {
               </div>
             )}
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  const t = selectedComplaintModal;
+                  setSelectedComplaintModal(null);
+                  setChatTicket(t);
+                }}
+                className="px-3.5 py-2 bg-blue-50 text-blue-700 font-bold rounded-xl text-xs flex items-center gap-1.5 hover:bg-blue-100 transition-colors"
+              >
+                <MessageSquare size={14} /> Message Agent
+              </button>
               <button
                 onClick={() => setSelectedComplaintModal(null)}
                 className="px-4 py-2 btn-primary rounded-xl text-xs font-semibold cursor-pointer"
@@ -531,6 +566,17 @@ export default function CustomerDashboard() {
           </div>
         </div>
       )}
+
+      {/* Direct Ticket Conversation Modal (Customer <-> Support Agent) */}
+      <TicketChatModal
+        isOpen={!!chatTicket}
+        onClose={() => setChatTicket(null)}
+        ticket={chatTicket}
+        onTicketUpdated={(updated) => {
+          setTickets(prev => prev.map(t => t._id === updated._id ? updated : t));
+          if (chatTicket?._id === updated._id) setChatTicket(updated);
+        }}
+      />
 
       {/* Floating AI Support Agent Chatbot */}
       <ChatWidget onOpenCreateTicket={() => setIsModalOpen(true)} />

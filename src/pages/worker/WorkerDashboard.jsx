@@ -3,9 +3,11 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import StatusBadge from '../../components/common/StatusBadge';
 import ActionMenu from '../../components/common/ActionMenu';
 import WorkerNotificationBanner from '../../components/worker/WorkerNotificationBanner';
+import TicketChatModal from '../../components/tickets/TicketChatModal';
+import AITriageReviewModal from '../../components/worker/AITriageReviewModal';
 import API from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Wrench, CheckCircle2, Clock, AlertTriangle, Star, Check, X, ShieldAlert, Lock, User, Sparkles } from 'lucide-react';
+import { Wrench, CheckCircle2, Clock, AlertTriangle, Star, Check, X, ShieldAlert, Lock, User, Sparkles, MessageSquare, Bot } from 'lucide-react';
 import io from 'socket.io-client';
 
 export default function WorkerDashboard() {
@@ -17,6 +19,9 @@ export default function WorkerDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedComplaintModal, setSelectedComplaintModal] = useState(null);
   const [resolutionModalTicket, setResolutionModalTicket] = useState(null);
+  const [resolutionNoteText, setResolutionNoteText] = useState('');
+  const [chatTicket, setChatTicket] = useState(null);
+  const [aiReviewTicket, setAiReviewTicket] = useState(null);
   const seenReviewsRef = useRef({});
   const workerTicketsSnapshotRef = useRef('');
 
@@ -31,6 +36,14 @@ export default function WorkerDashboard() {
     
     socket.on('new_booking_notification', (data) => {
       setNotification(data);
+      fetchWorkerTickets();
+    });
+
+    socket.on('ticket_message_received', () => {
+      fetchWorkerTickets();
+    });
+
+    socket.on('ticket_ai_reviewed', () => {
       fetchWorkerTickets();
     });
 
@@ -356,13 +369,28 @@ export default function WorkerDashboard() {
                           </div>
                         </td>
 
-                      <td className="py-3.5 px-4">
-                        <p className="font-bold text-slate-800 text-sm truncate max-w-xs">{t.subject}</p>
-                        {t.aiTriage && (
-                          <span className="text-[10px] text-blue-700 font-semibold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 inline-block mt-0.5">
-                            🤖 AI: {t.aiTriage.predictedCategory}
-                          </span>
-                        )}
+                        <td className="py-3.5 px-4 max-w-xs">
+                          <p className="font-bold text-slate-800 text-sm truncate">{t.subject}</p>
+                        {/* Human Review & Edit AI Triage Button (Hackathon Demo Step 3) */}
+                        <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => setAiReviewTicket(t)}
+                            className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+                              t.aiTriage?.isReviewedByAgent || t.aiTriage?.isReviewedByWorker
+                                ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                                : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 animate-pulse'
+                            }`}
+                            title="Click to review and edit AI suggestions"
+                          >
+                            <Sparkles size={11} />
+                            <span>
+                              {t.aiTriage?.isReviewedByAgent || t.aiTriage?.isReviewedByWorker
+                                ? `AI: ${t.category} (Reviewed)`
+                                : `Review AI: ${t.category || t.aiTriage?.predictedCategory || 'General'}`}
+                            </span>
+                          </button>
+                        </div>
                       </td>
 
                       {/* Urgency Selector Dropdown [Low, Medium, High] */}
@@ -386,7 +414,7 @@ export default function WorkerDashboard() {
                         )}
                       </td>
 
-                      {/* Status Selector Dropdown [Pending, Accepted, In Progress, Completed] */}
+                      {/* Status Selector Dropdown [New, Assigned, In Progress, Resolved, Rejected] */}
                       <td className="py-3.5 px-4">
                         {isLocked ? (
                           <div className="flex items-center gap-1">
@@ -395,14 +423,14 @@ export default function WorkerDashboard() {
                           </div>
                         ) : (
                           <select
-                            value={t.status}
+                            value={t.status === 'completed' ? 'resolved' : t.status === 'accepted' ? 'assigned' : t.status === 'pending' ? 'new' : t.status}
                             onChange={(e) => handleStatusChange(t, e.target.value)}
                             className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                           >
-                            <option value="pending">Alert: Pending</option>
-                            <option value="accepted">Accepted</option>
+                            <option value="new">New</option>
+                            <option value="assigned">Assigned</option>
                             <option value="in-progress">In Progress</option>
-                            <option value="completed">Completed ✅</option>
+                            <option value="completed">Resolved ✅</option>
                             <option value="rejected">Rejected ❌</option>
                           </select>
                         )}
@@ -421,38 +449,55 @@ export default function WorkerDashboard() {
                               </p>
                             )}
                           </div>
-                        ) : t.status === 'completed' ? (
+                        ) : t.status === 'completed' || t.status === 'resolved' ? (
                           <span className="text-[11px] text-slate-400 font-medium">Awaiting review</span>
                         ) : (
                           <span className="text-[11px] text-slate-300">—</span>
                         )}
                       </td>
 
-                      {/* Actions: Accept/Reject Buttons or View */}
+                      {/* Actions: Accept/Reject, Direct Chat, or View Details */}
                       <td className="py-3.5 px-4 text-right">
-                        {t.status === 'pending' ? (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handleAcceptBooking(t._id)}
-                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1"
-                            >
-                              <Check size={12} /> Accept
-                            </button>
-                            <button
-                              onClick={() => handleRejectBooking(t._id)}
-                              className="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                            >
-                              <X size={12} /> Reject
-                            </button>
-                          </div>
-                        ) : (
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Direct Ticket Conversation / Reply Button (Hackathon Demo Step 5) */}
                           <button
-                            onClick={() => setSelectedComplaintModal(t)}
-                            className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                            type="button"
+                            onClick={() => setChatTicket(t)}
+                            className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-bold transition-all cursor-pointer relative"
+                            title="Direct Conversation with Customer"
                           >
-                            View Details
+                            <MessageSquare size={14} />
+                            {t.messages && t.messages.length > 0 && (
+                              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-600 text-white rounded-full text-[8px] flex items-center justify-center font-bold">
+                                {t.messages.length}
+                              </span>
+                            )}
                           </button>
-                        )}
+
+                          {t.status === 'pending' || t.status === 'new' ? (
+                            <>
+                              <button
+                                onClick={() => handleAcceptBooking(t._id)}
+                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1"
+                              >
+                                <Check size={12} /> Accept
+                              </button>
+                              <button
+                                onClick={() => handleRejectBooking(t._id)}
+                                className="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                              >
+                                <X size={12} /> Reject
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => setSelectedComplaintModal(t)}
+                              className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                            >
+                              Details
+                            </button>
+                          )}
+                        </div>
                       </td>
 
                     </tr>
@@ -466,37 +511,48 @@ export default function WorkerDashboard() {
 
       </div>
 
-      {/* Resolution Note Modal */}
+      {/* Resolution Note Modal (Enforcing rule: cannot resolve without resolution note) */}
       {resolutionModalTicket && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="glass-panel p-6 rounded-3xl max-w-md w-full shadow-2xl space-y-4">
             <h3 className="font-extrabold text-slate-800 text-base flex items-center gap-2">
-              <CheckCircle2 className="text-emerald-600" /> Complete Task & Add Resolution Note
+              <CheckCircle2 className="text-emerald-600" /> Resolve Ticket & Enter Resolution Note
             </h3>
             <p className="text-xs text-slate-500">
-              Ticket <span className="font-bold text-blue-600">{resolutionModalTicket.ticketNumber}</span> will be marked as Completed. Once completed, status will be locked!
+              Ticket <span className="font-bold text-blue-600">{resolutionModalTicket.ticketNumber}</span> will be marked as Resolved. A resolution note is required before completing.
             </p>
 
-            <textarea
-              rows={3}
-              value={resolutionNoteText}
-              onChange={(e) => setResolutionNoteText(e.target.value)}
-              placeholder="Enter resolution notes (e.g. Fixed water leakage and recharged gas)..."
-              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-            />
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Resolution Note (Required):</label>
+              <textarea
+                rows={3}
+                value={resolutionNoteText}
+                onChange={(e) => setResolutionNoteText(e.target.value)}
+                placeholder="Enter details of how you resolved the issue (e.g., Refund of $45 processed, parts replaced)..."
+                required
+                className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              />
+              {!resolutionNoteText.trim() && (
+                <p className="text-[11px] text-amber-600 font-medium">* Please enter a resolution note to resolve the ticket</p>
+              )}
+            </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 pt-2">
               <button
-                onClick={() => setResolutionModalTicket(null)}
+                onClick={() => {
+                  setResolutionModalTicket(null);
+                  setResolutionNoteText('');
+                }}
                 className="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmResolution}
-                className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl cursor-pointer shadow-md"
+                disabled={!resolutionNoteText.trim()}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl cursor-pointer shadow-md"
               >
-                Confirm Completion ✅
+                Confirm Resolution ✅
               </button>
             </div>
           </div>
@@ -506,7 +562,7 @@ export default function WorkerDashboard() {
       {/* Details View Modal */}
       {selectedComplaintModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="glass-panel p-6 rounded-3xl max-w-md w-full shadow-2xl space-y-4">
+          <div className="glass-panel p-6 rounded-3xl max-w-lg w-full shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
                 <span className="text-xs font-extrabold text-blue-600">{selectedComplaintModal.ticketNumber}</span>
@@ -524,12 +580,23 @@ export default function WorkerDashboard() {
 
             {selectedComplaintModal.resolutionNote && (
               <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-200 space-y-1 text-xs">
-                <span className="font-bold text-emerald-800">✅ Worker Resolution Note:</span>
+                <span className="font-bold text-emerald-800">✅ Resolution Note:</span>
                 <p className="text-emerald-700 font-medium">{selectedComplaintModal.resolutionNote}</p>
               </div>
             )}
 
-            <div className="flex justify-end">
+            <div className="flex justify-between items-center pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const t = selectedComplaintModal;
+                  setSelectedComplaintModal(null);
+                  setChatTicket(t);
+                }}
+                className="px-3 py-2 bg-blue-50 text-blue-700 font-bold rounded-xl text-xs flex items-center gap-1.5 hover:bg-blue-100 transition-colors"
+              >
+                <MessageSquare size={14} /> Chat with Customer
+              </button>
               <button
                 onClick={() => setSelectedComplaintModal(null)}
                 className="px-4 py-2 btn-primary rounded-xl text-xs font-semibold cursor-pointer"
@@ -540,6 +607,28 @@ export default function WorkerDashboard() {
           </div>
         </div>
       )}
+
+      {/* Direct Ticket Conversation Modal (Customer <-> Support Agent) */}
+      <TicketChatModal
+        isOpen={!!chatTicket}
+        onClose={() => setChatTicket(null)}
+        ticket={chatTicket}
+        onTicketUpdated={(updated) => {
+          setTickets(prev => prev.map(t => t._id === updated._id ? updated : t));
+          if (chatTicket?._id === updated._id) setChatTicket(updated);
+        }}
+      />
+
+      {/* Human AI Triage Review & Edit Modal (Agent reviews & edits AI suggestions) */}
+      <AITriageReviewModal
+        isOpen={!!aiReviewTicket}
+        onClose={() => setAiReviewTicket(null)}
+        ticket={aiReviewTicket}
+        onReviewSaved={(updated) => {
+          setTickets(prev => prev.map(t => t._id === updated._id ? updated : t));
+          fetchWorkerTickets();
+        }}
+      />
 
     </DashboardLayout>
   );

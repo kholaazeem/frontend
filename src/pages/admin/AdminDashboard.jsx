@@ -29,9 +29,9 @@ export default function AdminDashboard() {
 
   const stats = {
     total: tickets.length,
-    pending: tickets.filter(t => t.status === 'pending').length,
-    inProgress: tickets.filter(t => t.status === 'in-progress' || t.status === 'accepted').length,
-    completed: tickets.filter(t => t.status === 'completed').length,
+    pending: tickets.filter(t => t.status === 'pending' || t.status === 'new').length,
+    inProgress: tickets.filter(t => t.status === 'in-progress' || t.status === 'accepted' || t.status === 'assigned').length,
+    completed: tickets.filter(t => t.status === 'completed' || t.status === 'resolved').length,
     workers: new Set(tickets.map(t => t.assignedWorker?._id || t.assignedWorker?.name).filter(Boolean)).size,
     customers: new Set(tickets.map(t => t.customer?._id || t.customer?.name || t.customer?.email).filter(Boolean)).size
   };
