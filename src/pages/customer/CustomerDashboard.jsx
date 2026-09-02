@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import StatusBadge from '../../components/common/StatusBadge';
 import ActionMenu from '../../components/common/ActionMenu';
@@ -18,51 +18,97 @@ export default function CustomerDashboard() {
   const [completionAlert, setCompletionAlert] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const hasAutoOpenedRef = useRef({});
 
   useEffect(() => {
     fetchTickets();
 
-    // Live Socket.IO listener for ticket completion & updates
-    const socket = io('https://backend-iota-six-56.vercel.app');
+    // 3-second auto-poll: Guarantees 100% reliable updates on Vercel Serverless
+    const interval = setInterval(fetchTickets, 3000);
+
+    // Live Socket.IO listener for instant 0-second updates when available
+    const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
     
-    socket.on('ticket_status_updated', (data) => {
+    socket.on('ticket_status_updated', () => {
       fetchTickets();
-      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      if (data.status === 'completed') {
-        const notif = {
-          title: `🎉 Task Completed: ${data.ticketNumber}`,
-          message: `Worker finished your task! Click here to submit your 5-Star review.`,
-          time: timeStr,
-          ticket: data.ticket || { _id: data.ticketId, ticketNumber: data.ticketNumber, assignedWorker: data.assignedWorkerId }
-        };
-        setNotifications(prev => [notif, ...prev]);
-        setCompletionAlert(notif);
-
-        // Auto-open rating modal immediately so customer can rate!
-        setReviewModalTicket(data.ticket || { _id: data.ticketId, ticketNumber: data.ticketNumber, assignedWorker: data.assignedWorkerId });
-      } else {
-        const notif = {
-          title: `Ticket ${data.ticketNumber} Update`,
-          message: `Status changed to ${data.status}`,
-          time: timeStr
-        };
-        setNotifications(prev => [notif, ...prev]);
-      }
     });
 
-    return () => socket.disconnect();
+    return () => {
+      clearInterval(interval);
+      socket.disconnect();
+    };
   }, []);
 
   const fetchTickets = async () => {
     try {
       const res = await API.get('/tickets');
       if (Array.isArray(res.data)) {
-        setTickets(res.data);
+        const list = res.data;
+        setTickets(list);
+
+        // Build notifications list dynamically from tickets
+        const notifs = [];
+        let unratedCompleted = null;
+
+        list.forEach(t => {
+          if (t.status === 'completed') {
+            if (!t.isRated && !t.rating) {
+              notifs.push({
+                id: `completed_${t._id}`,
+                title: `🎉 Task Completed: ${t.ticketNumber}`,
+                message: `Worker finished "${t.subject}". Please rate your worker!`,
+                time: t.resolvedAt ? new Date(t.resolvedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Action Needed',
+                ticket: t
+              });
+              if (!unratedCompleted) unratedCompleted = t;
+            } else {
+              notifs.push({
+                id: `rated_${t._id}`,
+                title: `✅ Completed & Rated: ${t.ticketNumber}`,
+                message: `You gave ${t.rating}⭐ rating. Thank you!`,
+                time: 'Finished',
+                ticket: t
+              });
+            }
+          } else if (t.status === 'in-progress' || t.status === 'accepted') {
+            notifs.push({
+              id: `active_${t._id}`,
+              title: `⚙️ Work In Progress: ${t.ticketNumber}`,
+              message: `Worker is currently working on "${t.subject}".`,
+              time: 'In Progress',
+              ticket: t
+            });
+          }
+        });
+
+        setNotifications(notifs);
+
+        // If there's an unrated completed task, trigger banner & auto-open rating popup!
+        if (unratedCompleted) {
+          setCompletionAlert({
+            title: `🎉 Task Completed: ${unratedCompleted.ticketNumber}`,
+            message: `Worker finished your task! Click to submit your 5-Star review.`,
+            ticket: unratedCompleted
+          });
+
+          if (!hasAutoOpenedRef.current[unratedCompleted._id]) {
+            hasAutoOpenedRef.current[unratedCompleted._id] = true;
+            setReviewModalTicket(unratedCompleted);
+          }
+        }
       }
     } catch (err) {
       console.error('Fetch tickets error:', err);
     }
+  };
+
+  const handleReviewSubmitted = () => {
+    if (reviewModalTicket) {
+      hasAutoOpenedRef.current[reviewModalTicket._id] = true;
+    }
+    setCompletionAlert(null);
+    setReviewModalTicket(null);
+    fetchTickets();
   };
 
   const handleTicketCreated = (newTicket) => {
@@ -340,7 +386,7 @@ export default function CustomerDashboard() {
         isOpen={!!reviewModalTicket}
         onClose={() => setReviewModalTicket(null)}
         ticket={reviewModalTicket}
-        onReviewSubmitted={fetchTickets}
+        onReviewSubmitted={handleReviewSubmitted}
       />
 
       {/* View Complaint Modal */}

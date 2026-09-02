@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import StatusBadge from '../../components/common/StatusBadge';
 import ActionMenu from '../../components/common/ActionMenu';
@@ -18,21 +18,19 @@ export default function WorkerDashboard() {
   const [selectedComplaintModal, setSelectedComplaintModal] = useState(null);
   const [resolutionModalTicket, setResolutionModalTicket] = useState(null);
   const [resolutionNoteText, setResolutionNoteText] = useState('');
+  const seenReviewsRef = useRef({});
 
   useEffect(() => {
     fetchWorkerTickets();
+
+    // 3-second auto-poll for real-time updates on Vercel
+    const interval = setInterval(fetchWorkerTickets, 3000);
 
     // Socket.IO Real-time notification listener
     const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
     
     socket.on('new_booking_notification', (data) => {
       setNotification(data);
-      const notif = {
-        title: `🚨 New Booking: ${data.ticketNumber || 'Ticket'}`,
-        message: data.subject || 'Customer requested service booking',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setNotifications(prev => [notif, ...prev]);
       fetchWorkerTickets();
     });
 
@@ -43,18 +41,54 @@ export default function WorkerDashboard() {
         message: `${data.customerName || 'Customer'} rated: "${data.comment || 'Great service!'}"`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
-      setNotifications(prev => [notif, ...prev]);
       setReviewAlert(notif);
     });
 
-    return () => socket.disconnect();
+    return () => {
+      clearInterval(interval);
+      socket.disconnect();
+    };
   }, []);
 
   const fetchWorkerTickets = async () => {
     try {
       const res = await API.get('/tickets');
       if (Array.isArray(res.data)) {
-        setTickets(res.data);
+        const list = res.data;
+        setTickets(list);
+
+        // Build notifications for worker from current tickets
+        const notifs = [];
+        list.forEach(t => {
+          if (t.rating) {
+            notifs.push({
+              id: `review_${t._id}`,
+              title: `⭐ ${t.rating}-Star Customer Review`,
+              message: `Ticket #${t.ticketNumber}: "${t.reviewComment || 'Job completed'}"`,
+              time: 'Rated',
+              ticket: t
+            });
+
+            // If this is a new rating that worker hasn't seen yet in this session:
+            if (!seenReviewsRef.current[t._id]) {
+              seenReviewsRef.current[t._id] = true;
+              setReviewAlert({
+                title: `⭐ New ${t.rating}-Star Review Received!`,
+                message: `Customer rated ticket #${t.ticketNumber}: "${t.reviewComment || 'Job completed!'}"`
+              });
+            }
+          } else if (t.status === 'pending') {
+            notifs.push({
+              id: `booking_${t._id}`,
+              title: `🚨 Pending Booking: ${t.ticketNumber}`,
+              message: `Customer requested service for "${t.subject}".`,
+              time: 'Action Required',
+              ticket: t
+            });
+          }
+        });
+
+        setNotifications(notifs);
       }
     } catch (err) {
       console.error('Fetch worker tickets error:', err);
