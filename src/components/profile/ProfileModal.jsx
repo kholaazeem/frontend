@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import API from '../../services/api';
 
 export default function ProfileModal({ isOpen, onClose }) {
-  const { user, login } = useAuth();
+  const { user, setUser } = useAuth();
   const [name, setName] = useState(user?.name || '');
   const [specialty, setSpecialty] = useState(user?.specialty || 'General');
   const [password, setPassword] = useState('');
@@ -27,15 +27,15 @@ export default function ProfileModal({ isOpen, onClose }) {
 
       const res = await API.put('/auth/profile', payload);
       
-      // Update local storage user data
+      // Update local storage and auth state in-memory (no page reload!)
       const updatedUser = { ...user, ...res.data };
       localStorage.setItem('supportflow_user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
       
       setSuccessMsg('Profile updated successfully!');
       setTimeout(() => {
         setSuccessMsg('');
         onClose();
-        window.location.reload(); // Refresh to reflect updated name/role everywhere
       }, 1200);
     } catch (err) {
       setErrorMsg(err.response?.data?.message || err.message || 'Failed to update profile');
