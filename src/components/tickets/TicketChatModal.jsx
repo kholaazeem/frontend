@@ -23,7 +23,7 @@ export default function TicketChatModal({ isOpen, onClose, ticket, onTicketUpdat
     if (!isOpen || !ticket) return;
 
     // Connect socket for real-time ticket conversation updates
-    const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
+    const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['polling'] });
 
     socket.on('ticket_message_received', (data) => {
       if (data.ticketId === ticket._id || data.ticketId === ticket.id) {

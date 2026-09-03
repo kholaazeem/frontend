@@ -54,7 +54,7 @@ export default function WorkerDashboard() {
     const interval = setInterval(fetchWorkerTickets, 4000);
 
     // Socket.IO Real-time notification listener
-    const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
+    const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['polling'] });
     
     socket.on('new_booking_notification', (data) => {
       const currentWorkerId = userRef.current?._id;

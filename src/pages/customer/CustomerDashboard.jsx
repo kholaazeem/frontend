@@ -50,7 +50,7 @@ export default function CustomerDashboard() {
     const interval = setInterval(fetchTickets, 4000);
 
     // Live Socket.IO listener for instant 0-second updates when available
-    const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
+    const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['polling'] });
     
     socket.on('ticket_status_updated', () => {
       fetchTickets();
