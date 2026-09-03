@@ -43,8 +43,12 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }) 
       try {
         const res = await API.post('/tickets/triage-preview', { subject, description });
         setAiData(res.data);
-        if (res.data.suggestedWorkers && res.data.suggestedWorkers.length > 0 && !selectedWorkerId) {
-          setSelectedWorkerId(res.data.suggestedWorkers[0]._id);
+        // If customer hasn't manually picked a worker yet, pre-select the one matching AI's predicted category
+        if (res.data.predictedCategory && !selectedWorkerId && allWorkers.length > 0) {
+          const matchingSpecialist = allWorkers.find(w => w.specialty === res.data.predictedCategory);
+          if (matchingSpecialist) {
+            setSelectedWorkerId(matchingSpecialist._id);
+          }
         }
       } catch (err) {
         console.error('Triage preview error:', err);
@@ -54,7 +58,7 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }) 
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [subject, description]);
+  }, [subject, description, allWorkers, selectedWorkerId]);
 
   if (!isOpen) return null;
 
@@ -143,30 +147,41 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }) 
           {/* Step 3: Worker Selection Grid */}
           <div className="space-y-2 pt-2 border-t border-slate-200/80">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <UserCheck size={16} className="text-blue-600" />
-                Select Worker for Booking:
-              </label>
+              <div>
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <UserCheck size={16} className="text-blue-600" />
+                  Select Registered Worker:
+                </label>
+                {selectedWorkerId ? (
+                  <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                    ✓ Assigned to: <span className="font-bold">{allWorkers.find(w => w._id === selectedWorkerId)?.name || 'Selected Worker'}</span>
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                    ✨ AI will auto-dispatch the best specialist matching your category
+                  </p>
+                )}
+              </div>
               {selectedWorkerId && (
                 <button
                   type="button"
                   onClick={() => setSelectedWorkerId(null)}
                   className="text-[11px] text-blue-600 hover:underline font-semibold cursor-pointer"
                 >
-                  Auto-assign by System
+                  Let AI Auto-Assign
                 </button>
               )}
             </div>
 
-            {allWorkers.length === 0 && (!aiData?.suggestedWorkers || aiData.suggestedWorkers.length === 0) ? (
+            {allWorkers.length === 0 ? (
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl text-center text-xs text-slate-500">
-                No workers registered in system yet. Ticket will be queued for assignment upon creation.
+                Loading registered specialists...
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto pr-1">
-                {(allWorkers.length > 0 ? allWorkers : aiData.suggestedWorkers).map((worker) => {
+                {allWorkers.map((worker) => {
                   const isSelected = selectedWorkerId === worker._id;
-                  const isRecommended = aiData?.predictedCategory && (worker.specialty === aiData.predictedCategory);
+                  const isRecommended = aiData?.predictedCategory && (worker.specialty?.toLowerCase() === aiData.predictedCategory.toLowerCase());
 
                   return (
                     <div

@@ -41,6 +41,11 @@ export default function WorkerDashboard() {
   const [aiReviewTicket, setAiReviewTicket] = useState(null);
   const seenReviewsRef = useRef({});
   const workerTicketsSnapshotRef = useRef('');
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     fetchWorkerTickets();
@@ -52,7 +57,9 @@ export default function WorkerDashboard() {
     const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
     
     socket.on('new_booking_notification', (data) => {
-      if (!data.assignedWorkerId || String(data.assignedWorkerId) === String(user?._id)) {
+      const currentWorkerId = userRef.current?._id;
+      const isTargeted = !data.assignedWorkerId || String(data.assignedWorkerId) === String(currentWorkerId);
+      if (isTargeted) {
         setNotification({
           ticketId: data.ticketId,
           ticketNumber: data.ticketNumber,

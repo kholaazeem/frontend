@@ -443,7 +443,9 @@ export default function CustomerDashboard() {
                               </div>
                             )}
                             <div className="truncate">
-                              <p className="font-bold text-slate-800 text-xs truncate">{t.assignedWorker?.name || 'Auto Dispatch'}</p>
+                              <p className="font-bold text-slate-800 text-xs truncate">
+                                {t.assignedWorker?.name || (t.status === 'resolved' || t.status === 'completed' ? 'Support Specialist' : 'Pending Assignment')}
+                              </p>
                               <p className="text-[10px] text-slate-400 font-medium truncate">{t.assignedWorker?.specialty || t.category || 'Specialist'}</p>
                             </div>
                           </div>
