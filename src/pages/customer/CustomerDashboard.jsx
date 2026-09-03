@@ -342,7 +342,7 @@ export default function CustomerDashboard() {
             </div>
 
             {/* Status Filter Tab Pills */}
-            <div className="flex items-center gap-1 p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 self-start sm:self-auto">
+            <div className="flex items-center gap-1 p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 overflow-x-auto max-w-full self-start sm:self-auto">
               {[
                 { id: 'all', label: 'All', count: stats.total },
                 { id: 'pending', label: 'Pending', count: stats.pending },
@@ -352,7 +352,7 @@ export default function CustomerDashboard() {
                 <button
                   key={f.id}
                   onClick={() => { setStatusFilter(f.id); setCurrentPage(1); }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                     statusFilter === f.id
                       ? 'bg-white text-indigo-700 shadow-2xs border border-slate-200/70'
                       : 'text-slate-500 hover:text-slate-800'
@@ -369,8 +369,8 @@ export default function CustomerDashboard() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
+            <table className="w-full min-w-[650px] text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50/90 border-b border-slate-200/80 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                   <th className="py-3 px-4">Ticket ID</th>

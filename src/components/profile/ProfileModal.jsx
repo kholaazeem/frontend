@@ -45,8 +45,8 @@ export default function ProfileModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl max-w-md w-full shadow-2xl space-y-6 relative border border-white/90 bg-white/95">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+      <div className="glass-panel p-5 sm:p-8 rounded-3xl max-w-md w-full max-h-[92vh] overflow-y-auto shadow-2xl space-y-5 sm:space-y-6 relative border border-white/90 bg-white/95">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-200">

@@ -62,10 +62,10 @@ export default function Home() {
   ];
 
   return (
-    <div ref={containerRef} className="relative min-h-screen bg-white text-slate-900 overflow-hidden" style={{ cursor: 'none' }}>
-      {/* Custom Cursor */}
-      <div ref={cursorHaloRef} className="fixed top-0 left-0 w-10 h-10 rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%)' }} />
-      <div ref={cursorRef} className="fixed top-0 left-0 w-4 h-4 bg-blue-500 rounded-full pointer-events-none z-[10000] -translate-x-1/2 -translate-y-1/2" style={{ boxShadow: '0 0 20px rgba(59,130,246,0.7), 0 0 40px rgba(59,130,246,0.3)' }} />
+    <div ref={containerRef} className="relative min-h-screen bg-white text-slate-900 overflow-x-hidden md:cursor-none">
+      {/* Custom Cursor (Desktops only, hidden on touch screens) */}
+      <div ref={cursorHaloRef} className="hidden md:block fixed top-0 left-0 w-10 h-10 rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%)' }} />
+      <div ref={cursorRef} className="hidden md:block fixed top-0 left-0 w-4 h-4 bg-blue-500 rounded-full pointer-events-none z-[10000] -translate-x-1/2 -translate-y-1/2" style={{ boxShadow: '0 0 20px rgba(59,130,246,0.7), 0 0 40px rgba(59,130,246,0.3)' }} />
 
       {/* NAVBAR */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
@@ -124,11 +124,11 @@ export default function Home() {
                 Create Realistic AI Chatbots in Minutes — Perfect for Websites, Apps, and Customer Support. Resolve complaints 10x faster.
               </p>
 
-              <div className="hero-anim flex flex-wrap gap-4">
-                <Link to="/register" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-7 py-3.5 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5">
+              <div className="hero-anim flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+                <Link to="/register" className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-7 py-3.5 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5 text-center">
                   Start Free Trial <ArrowRight size={16} />
                 </Link>
-                <button onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })} className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-7 py-3.5 rounded-xl font-semibold text-sm border border-slate-200 hover:border-blue-300 transition-all shadow-sm cursor-pointer">
+                <button onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })} className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-7 py-3.5 rounded-xl font-semibold text-sm border border-slate-200 hover:border-blue-300 transition-all shadow-sm cursor-pointer text-center">
                   See How It Works
                 </button>
               </div>

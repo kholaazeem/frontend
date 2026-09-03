@@ -56,7 +56,7 @@ export default function Login() {
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl -z-10 pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-300/20 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 
-      <div ref={cardRef} className="glass-panel p-8 rounded-3xl max-w-md w-full shadow-2xl space-y-6 relative border border-white/80">
+      <div ref={cardRef} className="glass-panel p-5 sm:p-8 rounded-3xl max-w-md w-full mx-3 shadow-2xl space-y-5 sm:space-y-6 relative border border-white/80">
         <div className="text-center space-y-2">
           <div ref={robotRef} className="w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-3xl flex items-center justify-center mx-auto shadow-lg shadow-blue-500/30 text-white robot-glow">
             <Bot size={42} strokeWidth={1.8} />

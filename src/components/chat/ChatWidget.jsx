@@ -84,7 +84,7 @@ export default function ChatWidget({ onOpenCreateTicket }) {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50">
       
       {/* Floating Chat Trigger Button */}
       {!isOpen && (
@@ -103,7 +103,7 @@ export default function ChatWidget({ onOpenCreateTicket }) {
 
       {/* Floating Chat Window */}
       {isOpen && (
-        <div className="w-80 sm:w-96 h-[520px] bg-white rounded-2xl shadow-[0_25px_60px_-15px_rgba(15,23,42,0.2)] border border-slate-200/90 flex flex-col overflow-hidden animate-fadeIn">
+        <div className="w-[calc(100vw-2rem)] max-w-sm sm:w-96 h-[500px] max-h-[85vh] bg-white rounded-2xl shadow-[0_25px_60px_-15px_rgba(15,23,42,0.2)] border border-slate-200/90 flex flex-col overflow-hidden animate-fadeIn">
           
           {/* Header */}
           <div className="p-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">

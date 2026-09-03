@@ -87,8 +87,8 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="glass-panel p-6 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/90 space-y-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="glass-panel p-4 sm:p-6 rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-white/90 space-y-4 sm:space-y-5">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
@@ -237,18 +237,18 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }) 
           </div>
 
           {/* Submit Action Button */}
-          <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
+          <div className="pt-3 border-t border-slate-200 flex flex-col-reverse sm:flex-row justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-colors cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-colors cursor-pointer text-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="btn-primary px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 cursor-pointer shadow-md"
+              className="w-full sm:w-auto btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-md text-center"
             >
               {submitting ? 'Generating Booking...' : 'Confirm Booking & Create Ticket'}
               <ArrowRight size={16} />

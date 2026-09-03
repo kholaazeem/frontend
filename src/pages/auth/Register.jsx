@@ -70,7 +70,7 @@ export default function Register() {
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl -z-10 pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-300/20 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 
-      <div ref={cardRef} className="glass-panel p-8 rounded-3xl max-w-md w-full shadow-2xl space-y-6 relative border border-white/80">
+      <div ref={cardRef} className="glass-panel p-5 sm:p-8 rounded-3xl max-w-md w-full mx-3 shadow-2xl space-y-5 sm:space-y-6 relative border border-white/80">
         
         <div className="text-center space-y-1">
           <div className="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto shadow-md text-white mb-2">

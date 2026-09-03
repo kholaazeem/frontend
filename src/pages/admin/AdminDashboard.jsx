@@ -161,11 +161,11 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 border-b border-slate-200 pb-2">
+        <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
           <button
             type="button"
             onClick={() => setActiveTab('tickets')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'tickets'
                 ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
@@ -176,7 +176,7 @@ export default function AdminDashboard() {
           <button
             type="button"
             onClick={() => setActiveTab('users')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'users'
                 ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
@@ -189,15 +189,15 @@ export default function AdminDashboard() {
         {/* Tab 1: Master Tickets Table */}
         {activeTab === 'tickets' && (
           <div className="glass-panel rounded-3xl border border-white/90 shadow-lg overflow-hidden space-y-4">
-            <div className="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-4 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <h3 className="font-extrabold text-slate-800 text-base">All System Tickets</h3>
-              <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+              <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 self-start sm:self-auto">
                 {filteredTickets.length} total records
               </span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+            <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
+              <table className="w-full min-w-[650px] text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
                     <th className="py-3 px-4">Ticket ID</th>
@@ -260,8 +260,8 @@ export default function AdminDashboard() {
               </span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+            <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
+              <table className="w-full min-w-[650px] text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
                     <th className="py-3 px-4">User</th>

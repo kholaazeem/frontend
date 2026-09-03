@@ -359,8 +359,8 @@ export default function WorkerDashboard() {
             </span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
+            <table className="w-full min-w-[700px] text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50/90 border-b border-slate-200/80 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                   <th className="py-3 px-4">Ticket ID</th>

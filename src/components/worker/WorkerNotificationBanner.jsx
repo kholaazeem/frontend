@@ -22,16 +22,16 @@ export default function WorkerNotificationBanner({ notification, onAccept, onRej
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
         <button
           onClick={() => onReject(notification.ticketId)}
-          className="px-3.5 py-1.5 bg-white/10 hover:bg-red-500 text-white text-xs font-semibold rounded-xl border border-white/20 transition-all flex items-center gap-1 cursor-pointer"
+          className="flex-1 sm:flex-initial px-3.5 py-2 sm:py-1.5 bg-white/10 hover:bg-red-500 text-white text-xs font-semibold rounded-xl border border-white/20 transition-all flex items-center justify-center gap-1 cursor-pointer"
         >
           <XCircle size={14} /> Reject
         </button>
         <button
           onClick={() => onAccept(notification.ticketId)}
-          className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1 cursor-pointer"
+          className="flex-1 sm:flex-initial px-4 py-2 sm:py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1 cursor-pointer"
         >
           <CheckCircle2 size={14} /> Accept Booking
         </button>
