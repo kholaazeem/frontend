@@ -34,8 +34,13 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    if (!cleanEmail) {
+      setLocalError('Please enter your email address');
+      return;
+    }
     try {
-      const u = await login(email, password);
+      const u = await login(cleanEmail, password);
       if (u.role === 'customer') navigate('/customer/dashboard');
       else if (u.role === 'worker') navigate('/worker/dashboard');
       else if (u.role === 'admin') navigate('/admin/dashboard');

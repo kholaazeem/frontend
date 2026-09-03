@@ -28,8 +28,19 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    if (!cleanEmail) {
+      setLocalError('Please enter a valid email');
+      return;
+    }
     try {
-      const u = await register({ name, email, password, role, specialty });
+      const u = await register({ 
+        name: name ? name.trim() : 'User', 
+        email: cleanEmail, 
+        password, 
+        role, 
+        specialty 
+      });
       if (u.role === 'customer') navigate('/customer/dashboard');
       else if (u.role === 'worker') navigate('/worker/dashboard');
       else if (u.role === 'admin') navigate('/admin/dashboard');
