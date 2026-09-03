@@ -17,6 +17,23 @@ export default function CustomerDashboard() {
   const [selectedComplaintModal, setSelectedComplaintModal] = useState(null);
   const [reviewModalTicket, setReviewModalTicket] = useState(null);
   const [chatTicket, setChatTicket] = useState(null);
+  const [readMessageCounts, setReadMessageCounts] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('sf_cust_read_msgs') || '{}');
+    } catch {
+      return {};
+    }
+  });
+
+  const handleOpenChat = (ticket) => {
+    setChatTicket(ticket);
+    const workerMsgs = (ticket.messages || []).filter(m => m.senderRole === 'worker' || (m.sender && String(m.sender) !== String(user?._id)));
+    setReadMessageCounts(prev => {
+      const updated = { ...prev, [ticket._id]: workerMsgs.length };
+      try { localStorage.setItem('sf_cust_read_msgs', JSON.stringify(updated)); } catch (e) {}
+      return updated;
+    });
+  };
   const [notifications, setNotifications] = useState([]);
   const [completionAlert, setCompletionAlert] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -435,18 +452,26 @@ export default function CustomerDashboard() {
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             {/* Direct Message to Assigned Support Agent (Hackathon Demo Step 5) */}
-                            <button
-                              onClick={() => setChatTicket(t)}
-                              className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-bold transition-all cursor-pointer relative"
-                              title="Message Support Agent"
-                            >
-                              <MessageSquare size={13} />
-                              {t.messages && t.messages.length > 0 && (
-                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-600 text-white rounded-full text-[8px] flex items-center justify-center font-bold">
-                                  {t.messages.length}
-                                </span>
-                              )}
-                            </button>
+                            {(() => {
+                              const workerMsgs = (t.messages || []).filter(m => m.senderRole === 'worker' || (m.sender && String(m.sender) !== String(user?._id)));
+                              const unreadFromWorker = Math.max(0, workerMsgs.length - (readMessageCounts[t._id] || 0));
+
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenChat(t)}
+                                  className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-bold transition-all cursor-pointer relative"
+                                  title="Message Support Agent"
+                                >
+                                  <MessageSquare size={13} />
+                                  {unreadFromWorker > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white rounded-full text-[9px] flex items-center justify-center font-extrabold shadow-xs animate-pulse">
+                                      {unreadFromWorker}
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })()}
 
                             {t.status === 'completed' && (
                               t.isRated || t.rating ? (

@@ -21,6 +21,23 @@ export default function WorkerDashboard() {
   const [resolutionModalTicket, setResolutionModalTicket] = useState(null);
   const [resolutionNoteText, setResolutionNoteText] = useState('');
   const [chatTicket, setChatTicket] = useState(null);
+  const [readMessageCounts, setReadMessageCounts] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('sf_worker_read_msgs') || '{}');
+    } catch {
+      return {};
+    }
+  });
+
+  const handleOpenChat = (ticket) => {
+    setChatTicket(ticket);
+    const customerMsgs = (ticket.messages || []).filter(m => m.senderRole === 'customer' || (m.sender && String(m.sender) !== String(user?._id)));
+    setReadMessageCounts(prev => {
+      const updated = { ...prev, [ticket._id]: customerMsgs.length };
+      try { localStorage.setItem('sf_worker_read_msgs', JSON.stringify(updated)); } catch (e) {}
+      return updated;
+    });
+  };
   const [aiReviewTicket, setAiReviewTicket] = useState(null);
   const seenReviewsRef = useRef({});
   const workerTicketsSnapshotRef = useRef('');
@@ -35,7 +52,13 @@ export default function WorkerDashboard() {
     const socket = io('https://backend-iota-six-56.vercel.app', { transports: ['websocket', 'polling'] });
     
     socket.on('new_booking_notification', (data) => {
-      setNotification(data);
+      if (!data.assignedWorkerId || String(data.assignedWorkerId) === String(user?._id)) {
+        setNotification({
+          ticketId: data.ticketId,
+          ticketNumber: data.ticketNumber,
+          subject: data.subject
+        });
+      }
       fetchWorkerTickets();
     });
 
@@ -95,10 +118,10 @@ export default function WorkerDashboard() {
                 message: `Customer rated ticket #${t.ticketNumber}: "${t.reviewComment || 'Job completed!'}"`
               });
             }
-          } else if (t.status === 'pending') {
+          } else if (t.status === 'pending' || t.status === 'assigned' || t.status === 'new') {
             notifs.push({
               id: `booking_${t._id}`,
-              title: `🚨 Pending Booking: ${t.ticketNumber}`,
+              title: `🚨 New Assignment: ${t.ticketNumber}`,
               message: `Customer requested service for "${t.subject}".`,
               time: 'Action Required',
               ticket: t
@@ -107,6 +130,16 @@ export default function WorkerDashboard() {
         });
 
         setNotifications(notifs);
+
+        // Show top alert banner if worker has any pending/assigned booking
+        const pendingBooking = list.find(t => (t.status === 'pending' || t.status === 'assigned' || t.status === 'new'));
+        if (pendingBooking) {
+          setNotification(prev => prev || {
+            ticketId: pendingBooking._id,
+            ticketNumber: pendingBooking.ticketNumber,
+            subject: pendingBooking.subject
+          });
+        }
       }
     } catch (err) {
       console.error('Fetch worker tickets error:', err);
@@ -460,21 +493,28 @@ export default function WorkerDashboard() {
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           {/* Direct Ticket Conversation / Reply Button (Hackathon Demo Step 5) */}
-                          <button
-                            type="button"
-                            onClick={() => setChatTicket(t)}
-                            className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-bold transition-all cursor-pointer relative"
-                            title="Direct Conversation with Customer"
-                          >
-                            <MessageSquare size={14} />
-                            {t.messages && t.messages.length > 0 && (
-                              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-600 text-white rounded-full text-[8px] flex items-center justify-center font-bold">
-                                {t.messages.length}
-                              </span>
-                            )}
-                          </button>
+                          {(() => {
+                            const customerMsgs = (t.messages || []).filter(m => m.senderRole === 'customer' || (m.sender && String(m.sender) !== String(user?._id)));
+                            const unreadFromCustomer = Math.max(0, customerMsgs.length - (readMessageCounts[t._id] || 0));
 
-                          {t.status === 'pending' || t.status === 'new' ? (
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenChat(t)}
+                                className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-bold transition-all cursor-pointer relative"
+                                title="Direct Conversation with Customer"
+                              >
+                                <MessageSquare size={14} />
+                                {unreadFromCustomer > 0 && (
+                                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white rounded-full text-[9px] flex items-center justify-center font-extrabold shadow-xs animate-pulse">
+                                    {unreadFromCustomer}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })()}
+
+                          {t.status === 'pending' || t.status === 'new' || t.status === 'assigned' ? (
                             <>
                               <button
                                 onClick={() => handleAcceptBooking(t._id)}
