@@ -9,8 +9,10 @@ import ChatWidget from '../../components/chat/ChatWidget';
 import API from '../../services/api';
 import { Ticket, PlusCircle, Clock, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, User, Star, BellRing, Sparkles, X, MessageSquare } from 'lucide-react';
 import io from 'socket.io-client';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CustomerDashboard() {
+  const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
