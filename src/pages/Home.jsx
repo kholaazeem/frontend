@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bot, Wrench, Clock, Star, Bell, MessageSquare, ArrowRight, Zap, Shield, Headphones, ChevronRight, Sparkles, CheckCircle2, Ticket, Menu, X } from 'lucide-react';
+import { Bot, Wrench, Clock, Star, Bell, MessageSquare, ArrowRight, Zap, Shield, Headphones, ChevronRight, Sparkles, CheckCircle2, Ticket, Menu, X, Sun, Moon } from 'lucide-react';
 import gsap from 'gsap';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Home() {
+  const { theme, toggleTheme, isDark } = useTheme();
   const containerRef = useRef(null);
   const cursorRef = useRef(null);
   const cursorHaloRef = useRef(null);
@@ -83,10 +85,28 @@ export default function Home() {
               ))}
             </div>
             <div className="hidden md:flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition-all cursor-pointer shadow-xs flex items-center justify-center"
+              >
+                {isDark ? <Sun size={17} className="text-amber-400 animate-pulse" /> : <Moon size={17} className="text-indigo-600" />}
+              </button>
               <Link to="/login" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors px-4 py-2">Try Free Trial</Link>
               <Link to="/register" className="text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-xl transition-all shadow-md shadow-blue-600/25 flex items-center gap-1.5">Contact Us<ChevronRight size={14} /></Link>
             </div>
-            <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden p-2 text-slate-600 cursor-pointer">{mobileMenu ? <X size={22} /> : <Menu size={22} />}</button>
+            <div className="md:hidden flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-indigo-600 transition-all cursor-pointer"
+              >
+                {isDark ? <Sun size={18} className="text-amber-400 animate-pulse" /> : <Moon size={18} className="text-indigo-600" />}
+              </button>
+              <button onClick={() => setMobileMenu(!mobileMenu)} className="p-2 text-slate-600 cursor-pointer">{mobileMenu ? <X size={22} /> : <Menu size={22} />}</button>
+            </div>
           </div>
         </div>
         {mobileMenu && (

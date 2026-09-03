@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Search, PlusCircle, Bell, Sparkles, Check, Clock, Star, X, Menu } from 'lucide-react';
+import { Search, PlusCircle, Bell, Sparkles, Check, Clock, Star, X, Menu, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function Navbar({ 
   onSearch, 
@@ -14,6 +15,7 @@ export default function Navbar({
   const [searchTerm, setSearchTerm] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const { user } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
 
   const handleSearchChange = (e) => {
     const val = e.target.value;
@@ -63,6 +65,20 @@ export default function Navbar({
 
       {/* Right Controls */}
       <div className="flex items-center gap-2 sm:gap-3">
+
+        {/* Dark / Light Mode Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          className="p-2 bg-white border border-slate-200/90 rounded-xl text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-2xs cursor-pointer flex items-center justify-center"
+        >
+          {isDark ? (
+            <Sun size={16} className="text-amber-400 animate-pulse" />
+          ) : (
+            <Moon size={16} className="text-indigo-600" />
+          )}
+        </button>
 
         {/* Real-time Notification Center */}
         <div className="relative">
