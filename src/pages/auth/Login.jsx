@@ -82,7 +82,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email"
+                placeholder="admin@gmail.com"
                 required
                 className="w-full pl-10 pr-4 py-2.5 bg-white/90 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
               />
@@ -97,7 +97,7 @@ export default function Login() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="12345admin"
                 required
                 className="w-full pl-10 pr-11 py-2.5 bg-white/90 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
               />
@@ -110,6 +110,18 @@ export default function Login() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+          </div>
+
+          {/* Quick Demo Credentials Auto-Fill */}
+          <div className="flex items-center justify-between text-[11px] bg-purple-50/80 border border-purple-100 rounded-xl px-3 py-1.5 text-purple-700">
+            <span className="font-semibold">🔑 Demo Admin: admin@gmail.com</span>
+            <button
+              type="button"
+              onClick={() => { setEmail('admin@gmail.com'); setPassword('12345admin'); }}
+              className="text-purple-700 hover:text-purple-900 font-bold hover:underline cursor-pointer"
+            >
+              Auto-fill
+            </button>
           </div>
 
           <button
